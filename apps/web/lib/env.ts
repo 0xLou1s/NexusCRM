@@ -1,11 +1,11 @@
-const apiUrl = process.env.NEXT_PUBLIC_API_URL
+import { createEnv } from "@t3-oss/env-nextjs"
+import { z } from "zod"
 
-if (!apiUrl) {
-  throw new Error(
-    "API_URL is not set. Copy .env.example to .env at the repository root."
-  )
-}
-
-export const env = {
-  apiUrl,
-} as const
+export const env = createEnv({
+  client: {
+    NEXT_PUBLIC_API_URL: z.url(),
+  },
+  runtimeEnv: {
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+  },
+})
