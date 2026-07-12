@@ -1,0 +1,8 @@
+{
+  "extends": "@workspace/typescript-config/base.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "include": ["schema.d.ts"],
+  "exclude": ["node_modules"]
+}

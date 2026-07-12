@@ -39,14 +39,14 @@
 
 ## PR 0.4 — Swagger and the type generator
 
-- [ ] Add `nestjs-zod`, `@nestjs/swagger`, `drizzle-zod` to `apps/api`
-- [ ] Call `patchNestJsSwagger()` at bootstrap so Zod schemas render into OpenAPI
-- [ ] Register `ZodValidationPipe` globally
-- [ ] `nest g module health` + `nest g controller health` — `GET /health` reads the `app_meta` row and returns it through a `ZodDto` derived from the Drizzle table via `drizzle-zod`
-- [ ] `scripts/generate-openapi.ts` — `NestFactory.create` **without** `listen()`, `SwaggerModule.createDocument`, write `openapi.json`, exit
-- [ ] Root script `gen:api-types` — run the generator, then `openapi-typescript openapi.json -o packages/api-types/schema.d.ts`
-- [ ] Create `packages/api-types` exporting the generated `schema.d.ts`
-- [ ] Verify: `/health` appears in Swagger UI **and** its response type shows up in `schema.d.ts`
+- [x] Add `nestjs-zod`, `@nestjs/swagger`, `drizzle-zod` to `apps/api`
+- [x] ~~Call `patchNestJsSwagger()`~~ — removed in nestjs-zod v5; the equivalent is `cleanupOpenApiDoc()` around the document, plus `@ZodResponse` on the handler
+- [x] Register `ZodValidationPipe` globally (and `ZodSerializerInterceptor`, which validates responses on the way out)
+- [x] `nest g module health` + `nest g controller health` — `GET /health` reads the `app_meta` row and returns it through a `ZodDto` derived from the Drizzle table via `drizzle-zod`
+- [x] ~~`scripts/generate-openapi.ts`~~ — **overruled by the repo owner**: the API serves `/openapi.json`, and types are generated from that URL, so a frontend developer can regenerate against a deployed backend branch without checking it out
+- [x] Root script `gen:api-types` — `openapi-typescript <API_URL>/openapi.json -o packages/api-types/schema.d.ts`
+- [x] Create `packages/api-types` exporting the generated `schema.d.ts`
+- [x] Verify: `/health` appears in Swagger UI **and** its response type shows up in `schema.d.ts`
 
 ## PR 0.5 — Wire the frontend to the generated types
 
@@ -72,7 +72,7 @@
 - [ ] `.env.example` with every var: `DATABASE_URL`, `REDIS_URL`, `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `JWT_SECRET`, `ENCRYPTION_KEY`, `APP_TIMEZONE`, `WEB_ORIGIN`
 - [ ] Dockerfiles for api, worker, web (multi-stage, pnpm workspace aware)
 - [ ] CI: `turbo lint typecheck test build`
-- [ ] CI: **the type-drift gate** — run `pnpm gen:api-types`, then `git diff --exit-code packages/api-types`. Drift fails the build.
+- [ ] CI: **the type-drift gate** — start the API, point `API_URL` at it, run `pnpm gen:api-types`, then `git diff --exit-code packages/api-types`. Drift fails the build. (Types are generated from a URL, so CI has to serve one; a placeholder `DATABASE_URL` is enough, because the connection is lazy and `/openapi.json` never queries.)
 - [ ] Verify: deliberately edit `schema.d.ts` by hand and confirm CI goes red
 
 ## PR 0.8 — Error contract and test harness
