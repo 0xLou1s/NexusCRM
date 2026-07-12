@@ -50,11 +50,12 @@
 
 ## PR 0.5 — Wire the frontend to the generated types
 
-- [ ] Add `openapi-fetch` and `@tanstack/react-query` to `apps/web`
-- [ ] `lib/api-client.ts` — an `openapi-fetch` client typed with `paths` from `@workspace/api-types`, `credentials: 'include'` (Phase 1 needs it)
-- [ ] `app/providers.tsx` — the TanStack Query provider, with `refetchOnReconnect` on (the spec depends on this to recover from missed socket events)
-- [ ] One page calling `/health` and rendering the value
-- [ ] Verify: changing the Drizzle column type breaks `pnpm typecheck` on the **web** app. If it does not, the chain is not actually connected — stop and fix it before moving on.
+- [x] Add `openapi-fetch` and `@tanstack/react-query` to `apps/web` (plus `openapi-react-query`, which turns the typed client into typed hooks)
+- [x] `lib/api/client.ts` — an `openapi-fetch` client typed with `paths` from `@workspace/api-types`, `credentials: 'include'` (Phase 1 needs it)
+- [x] `components/providers/` — the TanStack Query provider, with `refetchOnReconnect` on (the spec depends on this to recover from missed socket events)
+- [x] One page calling `/health` and rendering the value
+- [x] CORS on the API (`WEB_ORIGIN`, `credentials: true`) — pulled forward from PR 1.3, because the browser cannot reach the API without it
+- [x] Verify: renaming a Drizzle column breaks `pnpm typecheck` on the **web** app, once `pnpm gen:api-types` has run. Types come from a URL, so the regeneration step is what carries the change across — a stale `schema.d.ts` is caught by the drift gate in PR 0.7, not by the compiler.
 
 ## PR 0.6 — Scaffold `apps/zalo-worker`
 

@@ -11,6 +11,14 @@ async function bootstrap() {
 
   const config = app.get(ConfigService<Env, true>)
 
+  // The frontend is a different origin (:3000 vs :3001) and the session is a
+  // cookie, so the browser sends nothing unless the API names the origin and
+  // allows credentials (spec §6).
+  app.enableCors({
+    origin: config.get("WEB_ORIGIN", { infer: true }),
+    credentials: true,
+  })
+
   // The UI exposes the entire API surface, so it is a development affordance
   // only: production drops it or puts it behind auth (spec §7).
   //
