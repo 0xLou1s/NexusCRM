@@ -11,9 +11,6 @@ export const envSchema = z.object({
     .default("development"),
   PORT: z.coerce.number().int().positive().default(3001),
   DATABASE_URL: z.url(),
-  // The single origin allowed to send credentialed requests. A wildcard is not
-  // an option: the browser refuses `*` together with cookies, and the session
-  // rides in a cookie (spec §6).
   WEB_ORIGIN: z.url().default("http://localhost:3000"),
 })
 

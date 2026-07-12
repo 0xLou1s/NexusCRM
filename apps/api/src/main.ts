@@ -11,20 +11,15 @@ async function bootstrap() {
 
   const config = app.get(ConfigService<Env, true>)
 
-  // The frontend is a different origin (:3000 vs :3001) and the session is a
-  // cookie, so the browser sends nothing unless the API names the origin and
-  // allows credentials (spec §6).
+  // Exact origin, not "*": the session is a cookie, and browsers refuse a
+  // wildcard together with credentials (spec §6).
   app.enableCors({
     origin: config.get("WEB_ORIGIN", { infer: true }),
     credentials: true,
   })
 
-  // The UI exposes the entire API surface, so it is a development affordance
-  // only: production drops it or puts it behind auth (spec §7).
-  //
-  // `/openapi.json` is not just documentation — it is the source `pnpm
-  // gen:api-types` reads to regenerate the frontend's types, so any environment
-  // a frontend developer generates against must serve it.
+  // Dev only — Swagger exposes the whole API surface (spec §7). /openapi.json
+  // is also what `pnpm gen:api-types` reads.
   if (config.get("NODE_ENV", { infer: true }) !== "production") {
     SwaggerModule.setup("docs", app, buildOpenApiDocument(app), {
       jsonDocumentUrl: "openapi.json",
