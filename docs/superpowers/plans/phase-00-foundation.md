@@ -27,7 +27,7 @@
 - [x] `src/schema/index.ts` — barrel file, empty for now
 - [x] Scripts: `db:generate`, `db:migrate`, `db:studio`
 - [x] A trivial first table to prove migrations run end to end (e.g. `app_meta` with a `version` row) — this is also what `/health` reads
-- [ ] Verify: `pnpm --filter @workspace/db db:migrate` applies against Supabase — applied cleanly against a real Postgres 16; still to be run against Supabase once `DATABASE_URL` exists
+- [x] Verify: `pnpm --filter @workspace/db db:migrate` applies against Supabase
 
 ## PR 0.3 — `packages/contracts`
 
