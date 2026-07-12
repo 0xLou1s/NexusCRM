@@ -1,0 +1,26 @@
+{
+  "name": "@workspace/api-types",
+  "version": "0.0.0",
+  "private": true,
+  "types": "./schema.d.ts",
+  "exports": {
+    ".": {
+      "types": "./schema.d.ts"
+    }
+  },
+  "files": [
+    "schema.d.ts"
+  ],
+  "scripts": {
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@workspace/eslint-config": "workspace:*",
+    "@workspace/prettier-config": "workspace:*",
+    "@workspace/typescript-config": "workspace:*",
+    "eslint": "^9",
+    "prettier": "^3.8.3",
+    "typescript": "^5"
+  }
+}
