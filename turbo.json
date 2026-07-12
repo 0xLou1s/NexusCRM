@@ -6,6 +6,7 @@
     "PORT",
     "DATABASE_URL",
     "DIRECT_DATABASE_URL",
+    "REDIS_URL",
     "API_URL",
     "NEXT_PUBLIC_API_URL",
     "WEB_ORIGIN"
