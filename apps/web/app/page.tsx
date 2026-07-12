@@ -1,5 +1,6 @@
 "use client"
 
+import { useHealth } from "@/hooks/data/use-health"
 import { Button } from "@workspace/ui/components/motion/button/base"
 import {
   StatefulButton,
@@ -10,6 +11,7 @@ import { useState } from "react"
 
 export default function Page() {
   const [state, setState] = useState<ButtonState>("idle")
+  const { health, isLoading, isError } = useHealth()
 
   const run = () => {
     setState("loading")
@@ -53,6 +55,27 @@ export default function Page() {
         <div className="font-mono text-xs text-muted-foreground">
           (Press <kbd>d</kbd> to toggle dark mode)
         </div>
+
+        {isLoading && (
+          <p className="text-sm text-muted-foreground">Checking the API…</p>
+        )}
+
+        {isError && (
+          <p className="text-sm text-red-500">
+            The API is unreachable. Is it running?
+          </p>
+        )}
+
+        {health && (
+          <dl className="grid grid-cols-[auto_1fr] gap-x-3 font-mono text-xs">
+            <dt className="text-muted-foreground">status</dt>
+            <dd>{health.status}</dd>
+            <dt className="text-muted-foreground">schema</dt>
+            <dd>{health.meta.version}</dd>
+            <dt className="text-muted-foreground">updated</dt>
+            <dd>{new Date(health.meta.updatedAt).toISOString()}</dd>
+          </dl>
+        )}
       </div>
     </div>
   )

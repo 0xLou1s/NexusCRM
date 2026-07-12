@@ -11,6 +11,7 @@ export const envSchema = z.object({
     .default("development"),
   PORT: z.coerce.number().int().positive().default(3001),
   DATABASE_URL: z.url(),
+  WEB_ORIGIN: z.url().default("http://localhost:3000"),
 })
 
 export type Env = z.infer<typeof envSchema>
