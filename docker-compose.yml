@@ -1,0 +1,96 @@
+# Local orchestration of the four processes. There is no postgres service:
+# Supabase hosts it, so DATABASE_URL points out of the compose network.
+#
+#   cp .env.example .env && $EDITOR .env && docker compose up --build
+
+name: nexuscrm
+
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      # The image defaults to production, where Swagger is off (spec §7). Compose
+      # is a development tool, so /docs and /openapi.json stay reachable here.
+      NODE_ENV: ${NODE_ENV:-development}
+      PORT: 3001
+      DATABASE_URL: ${DATABASE_URL:?set DATABASE_URL in .env}
+      REDIS_URL: redis://redis:6379
+      WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:3000}
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      # /health reads a row from Supabase, so this is green only when the
+      # database is actually reachable.
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:3001/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  zalo-worker:
+    build:
+      context: .
+      dockerfile: apps/zalo-worker/Dockerfile
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      # The worker has no HTTP listener; Redis is its only dependency, so
+      # speaking PING to it is the honest check. It runs from the app directory
+      # because pnpm does not hoist: ioredis resolves there, not at /repo.
+      # Real readiness probes for both backends land in Phase 12.
+      test:
+        - CMD-SHELL
+        - >-
+          cd /repo/apps/zalo-worker && node -e "const R=require('ioredis');
+          const r=new R(process.env.REDIS_URL,{connectTimeout:2000,maxRetriesPerRequest:1});
+          r.ping().then(()=>r.quit()).then(()=>process.exit(0)).catch(()=>process.exit(1))"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        # Baked into the client bundle at build time, so it must be the origin a
+        # browser can reach — "http://api:3001" only resolves inside the network.
+        API_URL: ${API_URL:-http://localhost:3001}
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:3000/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+volumes:
+  redis-data:

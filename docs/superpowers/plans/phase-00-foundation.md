@@ -69,12 +69,12 @@
 
 ## PR 0.7 — Compose and CI
 
-- [ ] `docker-compose.yml`: `redis`, `api`, `zalo-worker`, `web`. **No postgres service** — Supabase hosts it.
-- [ ] `.env.example` with every var: `DATABASE_URL`, `REDIS_URL`, `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `JWT_SECRET`, `ENCRYPTION_KEY`, `APP_TIMEZONE`, `WEB_ORIGIN`
-- [ ] Dockerfiles for api, worker, web (multi-stage, pnpm workspace aware)
-- [ ] CI: `turbo lint typecheck test build`
-- [ ] CI: **the type-drift gate** — start the API, point `API_URL` at it, run `pnpm gen:api-types`, then `git diff --exit-code packages/api-types`. Drift fails the build. (Types are generated from a URL, so CI has to serve one; a placeholder `DATABASE_URL` is enough, because the connection is lazy and `/openapi.json` never queries.)
-- [ ] Verify: deliberately edit `schema.d.ts` by hand and confirm CI goes red
+- [x] `docker-compose.yml`: `redis`, `api`, `zalo-worker`, `web`. **No postgres service** — Supabase hosts it.
+- [x] `.env.example` with every var: `DATABASE_URL`, `REDIS_URL`, `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `JWT_SECRET`, `ENCRYPTION_KEY`, `APP_TIMEZONE`, `WEB_ORIGIN`
+- [x] Dockerfiles for api, worker, web (multi-stage, pnpm workspace aware)
+- [x] CI: `turbo lint typecheck test build`
+- [x] CI: **the type-drift gate** — start the API, point `API_URL` at it, run `pnpm gen:api-types`, then `git diff --exit-code packages/api-types`. Drift fails the build. (Types are generated from a URL, so CI has to serve one; a placeholder `DATABASE_URL` is enough, because the connection is lazy and `/openapi.json` never queries.)
+- [x] Verify: deliberately edit `schema.d.ts` by hand and confirm CI goes red
 
 ## PR 0.8 — Error contract and test harness
 
@@ -98,7 +98,7 @@ Both of these belong here, not in Phase 1. If they arrive later, every endpoint 
 
 ## Definition of done
 
-- [ ] `docker compose up` → all four services healthy
-- [ ] The web page shows a value that originated in Postgres
-- [ ] Renaming a Drizzle column and running `pnpm typecheck` breaks the **web** build
-- [ ] CI is green, and goes red when `schema.d.ts` is edited by hand
+- [x] `docker compose up` → all four services healthy
+- [x] The web page shows a value that originated in Postgres
+- [x] Renaming a Drizzle column and running `pnpm typecheck` breaks the **web** build
+- [x] CI is green, and goes red when `schema.d.ts` is edited by hand
