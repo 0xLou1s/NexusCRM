@@ -21,13 +21,13 @@
 
 ## PR 0.2 — `packages/db`
 
-- [ ] Create the package: `drizzle-orm`, `drizzle-kit`, `postgres` (postgres.js driver)
-- [ ] `drizzle.config.ts` reading `DATABASE_URL` (Supabase connection string, pooled port for the app)
-- [ ] `src/client.ts` — a client factory, not a module-level singleton, so api and worker each own their pool
-- [ ] `src/schema/index.ts` — barrel file, empty for now
-- [ ] Scripts: `db:generate`, `db:migrate`, `db:studio`
-- [ ] A trivial first table to prove migrations run end to end (e.g. `app_meta` with a `version` row) — this is also what `/health` reads
-- [ ] Verify: `pnpm --filter @workspace/db db:migrate` applies against Supabase
+- [x] Create the package: `drizzle-orm`, `drizzle-kit`, `postgres` (postgres.js driver)
+- [x] `drizzle.config.ts` reading `DATABASE_URL` (Supabase connection string, pooled port for the app)
+- [x] `src/client.ts` — a client factory, not a module-level singleton, so api and worker each own their pool
+- [x] `src/schema/index.ts` — barrel file, empty for now
+- [x] Scripts: `db:generate`, `db:migrate`, `db:studio`
+- [x] A trivial first table to prove migrations run end to end (e.g. `app_meta` with a `version` row) — this is also what `/health` reads
+- [x] Verify: `pnpm --filter @workspace/db db:migrate` applies against Supabase
 
 ## PR 0.3 — `packages/contracts`
 
