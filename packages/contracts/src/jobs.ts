@@ -1,7 +1,9 @@
-import type { z, ZodType } from "zod"
+import { z, type ZodType } from "zod"
 
 /** The queues `api` produces into and `zalo-worker` consumes from. */
-export const QUEUE_NAMES = {} as const satisfies Record<string, string>
+export const QUEUE_NAMES = {
+  zalo: "zalo",
+} as const satisfies Record<string, string>
 
 export type QueueName = (typeof QUEUE_NAMES)[keyof typeof QUEUE_NAMES]
 
@@ -14,7 +16,12 @@ export type JobSchemas = Record<string, ZodType>
  * Redis carries JSON across the process boundary, so a consumer parses a
  * payload through its schema instead of casting it.
  */
-export const jobSchemas = {} as const satisfies JobSchemas
+export const jobSchemas = {
+  // No-op probe from the walking skeleton: proves api -> worker without HTTP.
+  "zalo.noop": z.object({
+    enqueuedAt: z.iso.datetime(),
+  }),
+} as const satisfies JobSchemas
 
 export type JobName = keyof typeof jobSchemas
 

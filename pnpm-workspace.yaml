@@ -4,6 +4,9 @@ packages:
 
 allowBuilds:
   esbuild: true
+  # Native msgpack codec bullmq uses to serialize job payloads; falls back to
+  # slower pure JS when the build is blocked.
+  msgpackr-extract: true
   sharp: true
   unrs-resolver: true
   msw: false

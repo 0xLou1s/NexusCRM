@@ -59,13 +59,13 @@
 
 ## PR 0.6 — Scaffold `apps/zalo-worker`
 
-- [ ] `pnpm dlx @nestjs/cli new zalo-worker --directory apps/zalo-worker --package-manager pnpm --skip-git`
-- [ ] Convert it to a standalone app: `NestFactory.createApplicationContext`, no HTTP listener
-- [ ] Same shared config/lint/tsconfig treatment as `apps/api`
-- [ ] Add `@nestjs/bullmq` + `bullmq` + `ioredis` to both api and worker
-- [ ] Declare one queue and one no-op job in `packages/contracts`
-- [ ] api enqueues it on boot; worker consumes it and logs
-- [ ] Verify: the log line appears in the worker, proving api → worker works without HTTP
+- [x] `pnpm dlx @nestjs/cli new zalo-worker --directory apps/zalo-worker --package-manager pnpm --skip-git`
+- [x] Convert it to a standalone app: `NestFactory.createApplicationContext`, no HTTP listener
+- [x] Same shared config/lint/tsconfig treatment as `apps/api`
+- [x] Add `@nestjs/bullmq` + `bullmq` + `ioredis` to both api and worker
+- [x] Declare one queue and one no-op job in `packages/contracts`
+- [x] api enqueues it on boot; worker consumes it and logs
+- [x] Verify: the log line appears in the worker, proving api → worker works without HTTP
 
 ## PR 0.7 — Compose and CI
 

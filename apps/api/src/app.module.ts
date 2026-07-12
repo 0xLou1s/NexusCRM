@@ -1,11 +1,13 @@
+import { BullModule } from "@nestjs/bullmq"
 import { Module } from "@nestjs/common"
-import { ConfigModule } from "@nestjs/config"
+import { ConfigModule, ConfigService } from "@nestjs/config"
 import { APP_INTERCEPTOR, APP_PIPE } from "@nestjs/core"
 import { ZodSerializerInterceptor, ZodValidationPipe } from "nestjs-zod"
 import { resolve } from "node:path"
-import { validateEnv } from "./config/env"
+import { validateEnv, type Env } from "./config/env"
 import { DatabaseModule } from "./database/database.module"
 import { HealthModule } from "./health/health.module"
+import { JobsModule } from "./jobs/jobs.module"
 
 @Module({
   imports: [
@@ -17,8 +19,15 @@ import { HealthModule } from "./health/health.module"
       // the variables in the environment instead.
       envFilePath: resolve(process.cwd(), "../../.env"),
     }),
+    BullModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService<Env, true>) => ({
+        connection: { url: config.get("REDIS_URL", { infer: true }) },
+      }),
+    }),
     DatabaseModule,
     HealthModule,
+    JobsModule,
   ],
   providers: [
     // Requests are parsed by the Zod schema behind each DTO...
