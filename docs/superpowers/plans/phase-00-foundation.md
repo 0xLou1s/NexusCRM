@@ -31,11 +31,11 @@
 
 ## PR 0.3 — `packages/contracts`
 
-- [ ] Create the package with `zod` as its only runtime dependency
-- [ ] `src/events.ts` — the `ServerToClientEvents` / `ClientToServerEvents` interfaces, empty for now
-- [ ] `src/jobs.ts` — BullMQ queue names and payload schemas, empty for now
-- [ ] `src/index.ts` — barrel export
-- [ ] Verify: `apps/web` and `apps/api` can both import from `@workspace/contracts`
+- [x] Create the package with `zod` as its only runtime dependency
+- [x] `src/events.ts` — the `ServerToClientEvents` / `ClientToServerEvents` interfaces, empty for now
+- [x] `src/jobs.ts` — BullMQ queue names and payload schemas, empty for now
+- [x] `src/index.ts` — barrel export
+- [x] Verify: `apps/web` and `apps/api` can both import from `@workspace/contracts`
 
 ## PR 0.4 — Swagger and the type generator
 
