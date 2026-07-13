@@ -43,13 +43,15 @@
 
 ## PR 1.4 — Frontend session layer
 
-- [ ] `middleware.ts` — redirect unauthenticated users to `/login`; redirect authenticated users away from `/login`
-- [ ] A session provider fed by `GET /auth/me`
-- [ ] Login form logic (validation and submission only — visual design is the owner's)
-- [ ] An `openapi-fetch` middleware that, on 401, calls `/auth/refresh` once and retries the original request; if the refresh fails, it clears the session and redirects to login
-- [ ] Guard against a refresh stampede: concurrent 401s must share a single in-flight refresh, not fire one each
-- [ ] Logout
-- [ ] Verify: log in, hard-reload, still logged in. Wait for the access token to expire, act, and observe a silent refresh with no visible flicker.
+- [x] ~~`middleware.ts`~~ **`proxy.ts`** — Next 16 renamed it. Redirects an anonymous visitor to `/login?next=…`, and sends a signed-in one back to `next` (or `/`) when they land on `/login`. It gates on the **refresh** cookie, not the access cookie, which expires after 15 minutes while the session is still alive. It checks presence, never a signature: the JWT secret belongs to the API
+- [x] `?next=` is resolved in `proxy.ts` alone, so the open-redirect guard (`safeNextPath`) has one home and the login form never reads a query parameter
+- [x] A session provider fed by `GET /auth/me`, backed by a **zustand** store rather than context — the fetch middleware runs outside React and has to be able to drop the session
+- [x] Login form: react-hook-form + `@workspace/ui` `Input` / `StatefulButton`. Rules stay on the backend; `handleApiError` puts each 422 issue on the input its `path` names and toasts anything that names no field
+- [x] The frontend error dictionary promised by PR 0.9 — one file per module (`lib/i18n/messages/{common,auth,health}.ts`), composed into a `Record<ErrorKey, string>`, so a key added on the backend does not compile until it is translated
+- [x] An `openapi-fetch` middleware that, on 401, calls `/auth/refresh` once and retries the original request; if the refresh fails, it clears the session and redirects to login
+- [x] Guard against a refresh stampede: concurrent 401s share one in-flight refresh. Not merely an efficiency matter — rotation revokes the token it is handed, so a second concurrent refresh replays a spent one and the API revokes every session the user holds
+- [x] Logout
+- [x] Verify: every branch of `proxy.ts` exercised against a running Next 16 server, including both open-redirect payloads. The refresh, the replay of the request the 401 came from, and the stampede guard are covered by `apps/web/test`
 
 ## PR 1.5 — Activity log interceptor
 

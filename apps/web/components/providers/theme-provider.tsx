@@ -47,6 +47,13 @@ function ThemeHotkey() {
         return
       }
 
+      // Autofilling a password field dispatches a keydown carrying no `key`,
+      // which `KeyboardEvent` says is impossible — hence the check the types
+      // claim is redundant.
+      if (typeof event.key !== "string") {
+        return
+      }
+
       if (event.key.toLowerCase() !== "d") {
         return
       }
