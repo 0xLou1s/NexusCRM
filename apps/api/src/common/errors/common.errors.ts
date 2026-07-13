@@ -10,6 +10,11 @@ export class UnauthenticatedError extends DomainError {
   readonly code: ErrorKey = ERROR_KEYS.common.unauthenticated
 }
 
+export class ForbiddenError extends DomainError {
+  readonly kind: DomainErrorKind = "forbidden"
+  readonly code: ErrorKey = ERROR_KEYS.common.forbidden
+}
+
 export class ConflictError extends DomainError {
   readonly kind: DomainErrorKind = "conflict"
   readonly code: ErrorKey = ERROR_KEYS.common.conflict

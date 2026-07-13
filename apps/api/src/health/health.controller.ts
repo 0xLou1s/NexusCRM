@@ -1,6 +1,7 @@
 import { Controller, Get, HttpStatus } from "@nestjs/common"
 import { ApiOperation, ApiResponse } from "@nestjs/swagger"
 import { ZodResponse } from "nestjs-zod"
+import { Public } from "../auth/decorators/public.decorator"
 import { ApiErrorDto } from "../common/errors/api-error.dto"
 import { HealthDto } from "./health.dto"
 import { HealthService } from "./health.service"
@@ -10,6 +11,9 @@ export class HealthController {
   constructor(private readonly healthService: HealthService) {}
 
   @Get()
+  // A liveness probe has no session to present, and an orchestrator that cannot
+  // read it restarts a healthy container.
+  @Public()
   @ApiOperation({ summary: "Liveness of the API and its database" })
   @ZodResponse({ status: 200, type: HealthDto })
   // Not a @ZodResponse: that decorator binds a DTO to the handler's return

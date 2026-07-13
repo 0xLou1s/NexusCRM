@@ -33,13 +33,13 @@
 
 ## PR 1.3 — Guards and org scoping
 
-- [ ] Global `JwtAuthGuard`, opt out with `@Public()` (register/login/refresh/health are public)
-- [ ] `RolesGuard` + `@Roles('owner', 'admin')`
-- [ ] `@CurrentUser()` and `@OrgId()` param decorators
-- [ ] The repository base: **every method takes `orgId` as its first argument.** Do not read it from an ambient request context — the point is that omitting it fails to compile (spec §4)
-- [ ] Enable CORS with `credentials: true`, restricted to `WEB_ORIGIN`
-- [ ] Tests: a request without a cookie → 401; a `member` hitting an `@Roles('admin')` route → 403; a repository call cannot be written without `orgId`
-- [ ] Run `pnpm gen:api-types`
+- [x] Global `JwtAuthGuard`, opt out with `@Public()` (register/login/refresh/logout/health are public). `@Public()` also writes an `x-public` extension onto the OpenAPI operation, which `openapi.ts` reads back to attach a 401 to everything the guard protects — so a new endpoint documents its 401 without remembering to
+- [x] `RolesGuard` + `@Roles('owner', 'admin')`. The decorator carries its own `@ApiResponse(403)`, so a route cannot restrict itself and forget to say so
+- [x] `@CurrentUser()` and `@OrgId()` param decorators
+- [x] The repository base: **every method takes `orgId` as its first argument.** Do not read it from an ambient request context — the point is that omitting it fails to compile (spec §4)
+- [x] Enable CORS with `credentials: true`, restricted to `WEB_ORIGIN` — already in `main.ts` since PR 0.5, verified rather than re-added
+- [x] Tests: a request without a cookie → 401; a `member` hitting an `@Roles('admin')` route → 403; a repository call cannot be written without `orgId` (a `@ts-expect-error` that `pnpm typecheck` fails on if it ever compiles)
+- [x] Run `pnpm gen:api-types` — no diff: the only guarded endpoint that existed, `GET /auth/me`, already declared its 401
 
 ## PR 1.4 — Frontend session layer
 
