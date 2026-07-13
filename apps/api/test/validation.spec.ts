@@ -11,6 +11,7 @@ import request from "supertest"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 import { z } from "zod"
 import { AppModule } from "../src/app.module"
+import { Public } from "../src/auth/decorators/public.decorator"
 import { ERROR_KEYS } from "../src/common/errors/error-keys"
 import { customIssue } from "../src/common/errors/zod-issue"
 
@@ -28,10 +29,13 @@ const signUpSchema = z
 class SignUpDto extends createZodDto(signUpSchema) {}
 
 // A throwaway endpoint, so the global pipe and the global filter can be
-// exercised together without tying this to any real route's schema.
+// exercised together without tying this to any real route's schema. @Public()
+// because the global JwtAuthGuard would otherwise 401 it before the pipe runs,
+// and validation is what this file is about.
 @Controller("__probe")
 class ProbeController {
   @Post()
+  @Public()
   create(@Body() body: SignUpDto) {
     return body
   }

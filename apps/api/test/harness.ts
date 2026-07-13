@@ -1,4 +1,4 @@
-import type { INestApplication } from "@nestjs/common"
+import type { INestApplication, Type } from "@nestjs/common"
 import { Test } from "@nestjs/testing"
 import type { DatabaseConnection } from "@workspace/db"
 import { AppModule } from "../src/app.module"
@@ -13,10 +13,14 @@ export interface TestApp {
 
 // Nothing is overridden: test/env.ts has already pointed DATABASE_URL and
 // REDIS_URL at the containers, so this boots the real AppModule rather than a
-// rearrangement of it.
-export async function createTestApp(): Promise<TestApp> {
+// rearrangement of it. `controllers` mounts probe routes alongside it, for the
+// global pipe, filter and guards, which only have behaviour to test on a route.
+export async function createTestApp(
+  controllers: Type[] = []
+): Promise<TestApp> {
   const moduleRef = await Test.createTestingModule({
     imports: [AppModule],
+    controllers,
   }).compile()
 
   const app = moduleRef.createNestApplication()

@@ -7,7 +7,6 @@ import {
   Post,
   Req,
   Res,
-  UseGuards,
 } from "@nestjs/common"
 import { ConfigService } from "@nestjs/config"
 import { ApiOperation, ApiResponse } from "@nestjs/swagger"
@@ -18,11 +17,16 @@ import type { Env } from "../config/env"
 import { REFRESH_TOKEN_COOKIE } from "./auth.constants"
 import { clearSessionCookies, setSessionCookies } from "./auth.cookies"
 import { AuthService } from "./auth.service"
-import type { AuthenticatedRequest, SessionContext } from "./auth.types"
+import type {
+  AuthenticatedRequest,
+  AuthenticatedUser,
+  SessionContext,
+} from "./auth.types"
+import { CurrentUser } from "./decorators/current-user.decorator"
+import { Public } from "./decorators/public.decorator"
 import { LoginDto } from "./dto/login.dto"
 import { RegisterDto } from "./dto/register.dto"
 import { SessionDto } from "./dto/session.dto"
-import { JwtAuthGuard } from "./guards/jwt-auth.guard"
 
 @Controller("auth")
 export class AuthController {
@@ -39,6 +43,7 @@ export class AuthController {
   }
 
   @Post("register")
+  @Public()
   @ApiOperation({
     summary: "Bootstrap the first organization and its owner",
     description:
@@ -68,6 +73,7 @@ export class AuthController {
   }
 
   @Post("login")
+  @Public()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: "Exchange credentials for a session" })
   @ZodResponse({ status: HttpStatus.OK, type: SessionDto })
@@ -94,6 +100,7 @@ export class AuthController {
   }
 
   @Post("refresh")
+  @Public()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: "Rotate the refresh token and mint a new access token",
@@ -129,6 +136,7 @@ export class AuthController {
   }
 
   @Post("logout")
+  @Public()
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: "Revoke the refresh token and clear the cookies" })
   @ApiResponse({
@@ -145,7 +153,6 @@ export class AuthController {
   }
 
   @Get("me")
-  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: "The current user and their organization" })
   @ZodResponse({ status: HttpStatus.OK, type: SessionDto })
   @ApiResponse({
@@ -153,10 +160,8 @@ export class AuthController {
     description: "No access token, or one that no longer verifies",
     type: ApiErrorDto,
   })
-  async me(@Req() request: AuthenticatedRequest) {
-    if (!request.user) throw new Error("JwtAuthGuard attached no user")
-
-    return this.authService.readSession(request.user.id)
+  me(@CurrentUser() user: AuthenticatedUser) {
+    return this.authService.readSession(user.id)
   }
 }
 
