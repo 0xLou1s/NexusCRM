@@ -1,0 +1,23 @@
+node_modules
+**/node_modules
+**/dist
+**/.next
+**/.turbo
+**/coverage
+out
+
+.git
+.github
+.vscode
+.idea
+.DS_Store
+
+# Real secrets never enter an image layer. Every service is configured through
+# compose's `environment:` block instead.
+.env
+.env.*
+!.env.example
+
+docs
+**/*.md
+!apps/*/README.md

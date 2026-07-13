@@ -1,0 +1,90 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: lint / typecheck / test / build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # Build first, in its own turbo run. apps/web's tsconfig includes
+      # .next/types/**, so a typecheck racing its own build reads a half-written
+      # tree and fails at random. Ordering the two invocations removes the race.
+      - run: pnpm turbo run build
+        env:
+          # apps/web inlines this at build time. Nothing in CI calls the API, so
+          # the value only has to parse as a URL.
+          API_URL: http://localhost:3001
+
+      - run: pnpm turbo run lint typecheck test
+
+  type-drift:
+    name: type-drift gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm turbo run build --filter=api
+
+      # Types are generated from a URL, not from source (a frontend developer
+      # regenerates against a deployed backend), so CI has to serve one itself.
+      # Neither dependency needs to be real: postgres.js connects lazily and
+      # /openapi.json issues no query, and BullMQ's connection is not awaited at
+      # boot. NODE_ENV must stay out of production or Swagger is not mounted.
+      - name: Start the API
+        run: |
+          node apps/api/dist/main &
+          echo "API_PID=$!" >> "$GITHUB_ENV"
+          for _ in $(seq 1 30); do
+            curl -sf http://localhost:3001/openapi.json > /dev/null && exit 0
+            sleep 1
+          done
+          echo "The API did not serve /openapi.json within 30s"
+          exit 1
+        env:
+          NODE_ENV: development
+          PORT: 3001
+          DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
+          REDIS_URL: redis://localhost:6379
+
+      - name: Regenerate the frontend types
+        run: pnpm gen:api-types
+        env:
+          API_URL: http://localhost:3001
+
+      - name: Fail if the committed types drifted from the API
+        run: |
+          if ! git diff --exit-code -- packages/api-types; then
+            echo "::error::packages/api-types/schema.d.ts is stale. Run \`pnpm gen:api-types\` against a running API and commit the result."
+            exit 1
+          fi
+
+      - if: always()
+        run: kill "$API_PID" 2>/dev/null || true
