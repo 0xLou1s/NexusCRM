@@ -36,9 +36,65 @@ export interface components {
       }
     }
     ApiErrorDto: {
-      code: string
+      /** @enum {string} */
+      code:
+        | "common.internal"
+        | "common.validationFailed"
+        | "common.responseContractViolation"
+        | "common.badRequest"
+        | "common.unauthenticated"
+        | "common.forbidden"
+        | "common.notFound"
+        | "common.conflict"
+        | "common.tooManyRequests"
+        | "common.unavailable"
+        | "validation.invalidType"
+        | "validation.invalidValue"
+        | "validation.invalidFormat"
+        | "validation.invalidUnion"
+        | "validation.invalidKey"
+        | "validation.invalidElement"
+        | "validation.tooSmall"
+        | "validation.tooBig"
+        | "validation.notMultipleOf"
+        | "validation.unrecognizedKeys"
+        | "validation.custom"
+        | "health.appMetaMissing"
       message: string
-      details?: unknown
+      params?: {
+        [key: string]: unknown
+      }
+      issues?: {
+        path: string
+        /** @enum {string} */
+        code:
+          | "common.internal"
+          | "common.validationFailed"
+          | "common.responseContractViolation"
+          | "common.badRequest"
+          | "common.unauthenticated"
+          | "common.forbidden"
+          | "common.notFound"
+          | "common.conflict"
+          | "common.tooManyRequests"
+          | "common.unavailable"
+          | "validation.invalidType"
+          | "validation.invalidValue"
+          | "validation.invalidFormat"
+          | "validation.invalidUnion"
+          | "validation.invalidKey"
+          | "validation.invalidElement"
+          | "validation.tooSmall"
+          | "validation.tooBig"
+          | "validation.notMultipleOf"
+          | "validation.unrecognizedKeys"
+          | "validation.custom"
+          | "health.appMetaMissing"
+        message: string
+        params?: {
+          [key: string]: unknown
+        }
+      }[]
     }
   }
   responses: never
@@ -66,8 +122,8 @@ export interface operations {
           "application/json": components["schemas"]["HealthDto_Output"]
         }
       }
-      /** @description The request failed validation */
-      400: {
+      /** @description The request failed validation; `issues` names the fields */
+      422: {
         headers: {
           [name: string]: unknown
         }

@@ -88,6 +88,26 @@ Both of these belong here, not in Phase 1. If they arrive later, every endpoint 
 - [x] One integration test proving the harness works (hit `/health` against the containerized database)
 - [x] Verify: `pnpm test` runs unit and integration suites; CI runs both
 
+## PR 0.9 — Field errors, 422, and an i18n-ready error catalogue
+
+PR 0.8 gave every failure one shape. This one makes that shape usable by a form: an error has to say **which input** it is about, and it has to say it in a language the API does not choose.
+
+Added to Phase 0 rather than Phase 1 for the same reason as 0.8: the first form arrives in PR 1.4, and by then it is too late — the auth endpoints written before it would each invent their own answer.
+
+- [x] **The i18n key IS `code`.** One identifier, so a machine-readable code and a translation key cannot drift apart. The frontend renders `t(error.code, error.params)` and never reads `message`, which stays English for logs and for the public API consumers of Phase 11, who have no dictionary to look a key up in
+- [x] `apps/api/src/common/errors/error-keys.ts` — every key the API can name, in one catalogue, namespaced by module: `common.*` and `validation.*` are shared, everything else is owned by the module it names (`health.appMetaMissing`). Reused as a Zod enum in the DTO, so `schema.d.ts` gives the frontend a **literal union** of every key and a missing translation becomes a compile error there
+- [x] Errors are organised the same way: `common/errors/common.errors.ts` holds what any module may throw (`NotFoundError`, `ForbiddenError`, `ConflictError`, …); a module that has something more specific to say declares it in `<module>/<module>.errors.ts`. "conflict" is not something a user can act on; "auth.emailAlreadyTaken" is
+- [x] **A rejected request answers `422`, not 400.** The JSON parsed — its contents did not pass. 400 is left to Nest, for a body it could not read at all
+- [x] `issues: { path, code, message, params? }[]` — every failing field in one response, `path` dotted (`profile.phone`) so a form can match an issue to the input it names
+- [x] **The constraint travels with the issue.** `too_small` becomes `validation.tooSmall` with `params: { minimum: 8 }`, so the sentence lives in the dictionary and the number lives in the Zod schema. Change `min(8)` to `min(12)` and the translation follows; it never has to restate the rule
+- [x] `customIssue(key, message, params?)` — a `.refine()` names its own key, because only its author knows what the rule means. Zod has nowhere to put one, so it rides in Zod's `params` and the filter lifts it out
+- [x] A domain error can fill `issues` too: "this email is taken" is not a Zod failure, but it belongs under the email input, and the frontend must not need a second code path to put it there
+- [x] Test: a probe controller mounted in the integration suite. Phase 0 ships no endpoint that takes input, and the global pipe and the global filter only matter for what they do _together_ — this is the only way to walk that path end to end before Phase 1 exists
+- [x] Fix: `JobsService` now settles its in-flight boot enqueue in `onModuleDestroy`. `@nestjs/bullmq` closes the queue in `onApplicationShutdown`, which runs later — so a fast shutdown used to leave a BullMQ command rejecting against a closed connection with nobody to catch it
+- [x] Run `pnpm gen:api-types`
+
+The frontend's dictionary (a `Record<ErrorKey, string>`) lands with the first form, in PR 1.4.
+
 ---
 
 ## Risks
