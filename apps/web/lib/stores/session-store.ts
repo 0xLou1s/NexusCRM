@@ -2,8 +2,6 @@ import type { components } from "@workspace/api-types"
 import { create } from "zustand"
 
 export type Session = components["schemas"]["SessionDto_Output"]
-export type SessionUser = Session["user"]
-export type SessionOrganization = Session["organization"]
 
 interface SessionState {
   session: Session | undefined
