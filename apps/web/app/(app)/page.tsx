@@ -1,6 +1,8 @@
 "use client"
 
-import { useHealth } from "@/hooks/data/use-health"
+import { useLogout } from "@/hooks/data/auth/use-logout"
+import { useHealth } from "@/hooks/data/health/use-health"
+import { useCurrentSession } from "@/lib/stores/session-store"
 import { Button } from "@workspace/ui/components/motion/button/base"
 import {
   StatefulButton,
@@ -12,6 +14,8 @@ import { useState } from "react"
 export default function Page() {
   const [state, setState] = useState<ButtonState>("idle")
   const { health, isLoading, isError } = useHealth()
+  const { user, organization } = useCurrentSession()
+  const { logout, isPending: isSigningOut } = useLogout()
 
   const run = () => {
     setState("loading")
@@ -28,6 +32,20 @@ export default function Page() {
           <h1 className="font-medium">Project ready!</h1>
           <p>You may now add components and start building.</p>
           <p>We&apos;ve already added the button component for you.</p>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <p>
+            {user.fullName} ({user.role}) — {organization.name}
+          </p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={logout}
+            disabled={isSigningOut}
+          >
+            Sign out
+          </Button>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
