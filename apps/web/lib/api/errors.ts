@@ -1,7 +1,6 @@
 import type { components } from "@workspace/api-types"
 
 export type ApiError = components["schemas"]["ApiErrorDto"]
-export type ErrorIssue = NonNullable<ApiError["issues"]>[number]
 export type ErrorKey = ApiError["code"]
 
 export function isApiError(error: unknown): error is ApiError {
