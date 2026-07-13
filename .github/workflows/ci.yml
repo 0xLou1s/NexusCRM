@@ -76,6 +76,9 @@ jobs:
           PORT: 3001
           DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
           REDIS_URL: redis://localhost:6379
+          # Validated at boot, so the API will not start without one. Nothing
+          # here signs a token — this only has to satisfy the schema.
+          JWT_SECRET: placeholder-secret-for-generating-openapi-only
 
       - name: Regenerate the frontend types
         run: pnpm gen:api-types

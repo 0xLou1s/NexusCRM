@@ -21,6 +21,97 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  "/auth/register": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Bootstrap the first organization and its owner
+     * @description Answers exactly once. Every later call is refused — this is a self-hosted instance, not an open sign-up (spec §6.1).
+     */
+    post: operations["AuthController_register"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/auth/login": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Exchange credentials for a session */
+    post: operations["AuthController_login"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/auth/refresh": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Rotate the refresh token and mint a new access token
+     * @description The presented token is revoked and replaced. Presenting one that was already revoked revokes every session that user holds (spec §6).
+     */
+    post: operations["AuthController_refresh"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/auth/logout": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Revoke the refresh token and clear the cookies */
+    post: operations["AuthController_logout"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/auth/me": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** The current user and their organization */
+    get: operations["AuthController_me"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
 }
 export type webhooks = Record<string, never>
 export interface components {
@@ -59,6 +150,12 @@ export interface components {
         | "validation.notMultipleOf"
         | "validation.unrecognizedKeys"
         | "validation.custom"
+        | "auth.invalidCredentials"
+        | "auth.emailAlreadyTaken"
+        | "auth.registrationClosed"
+        | "auth.invalidRefreshToken"
+        | "auth.refreshTokenReused"
+        | "auth.accountDisabled"
         | "health.appMetaMissing"
       message: string
       params?: {
@@ -89,12 +186,56 @@ export interface components {
           | "validation.notMultipleOf"
           | "validation.unrecognizedKeys"
           | "validation.custom"
+          | "auth.invalidCredentials"
+          | "auth.emailAlreadyTaken"
+          | "auth.registrationClosed"
+          | "auth.invalidRefreshToken"
+          | "auth.refreshTokenReused"
+          | "auth.accountDisabled"
           | "health.appMetaMissing"
         message: string
         params?: {
           [key: string]: unknown
         }
       }[]
+    }
+    RegisterDto: {
+      organizationName: string
+      fullName: string
+      /** Format: email */
+      email: string
+      password: string
+    }
+    SessionDto_Output: {
+      user: {
+        /** Format: uuid */
+        id: string
+        /** Format: uuid */
+        orgId: string
+        email: string
+        fullName: string
+        /** @enum {string} */
+        role: "owner" | "admin" | "member"
+        isActive: boolean
+        /** Format: date-time */
+        createdAt: string
+        /** Format: date-time */
+        updatedAt: string
+      }
+      organization: {
+        /** Format: uuid */
+        id: string
+        name: string
+        /** Format: date-time */
+        createdAt: string
+        /** Format: date-time */
+        updatedAt: string
+      }
+    }
+    LoginDto: {
+      /** Format: email */
+      email: string
+      password: string
     }
   }
   responses: never
@@ -142,6 +283,252 @@ export interface operations {
       }
       /** @description The database is reachable but has not been migrated */
       503: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorDto"]
+        }
+      }
+    }
+  }
+  AuthController_register: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["RegisterDto"]
+      }
+    }
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["SessionDto_Output"]
+        }
+      }
+      /** @description An organization already exists, so registration is closed */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorDto"]
+        }
+      }
+      /** @description That email already belongs to a user */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorDto"]
+        }
+      }
+      /** @description The request failed validation; `issues` names the fields */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorDto"]
+        }
+      }
+      /** @description Unexpected server error */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorDto"]
+        }
+      }
+    }
+  }
+  AuthController_login: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["LoginDto"]
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["SessionDto_Output"]
+        }
+      }
+      /** @description Unknown email or wrong password — one answer for both */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorDto"]
+        }
+      }
+      /** @description The account has been deactivated */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorDto"]
+        }
+      }
+      /** @description The request failed validation; `issues` names the fields */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorDto"]
+        }
+      }
+      /** @description Unexpected server error */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorDto"]
+        }
+      }
+    }
+  }
+  AuthController_refresh: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["SessionDto_Output"]
+        }
+      }
+      /** @description The refresh token is missing, expired, unknown or replayed */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorDto"]
+        }
+      }
+      /** @description The request failed validation; `issues` names the fields */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorDto"]
+        }
+      }
+      /** @description Unexpected server error */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorDto"]
+        }
+      }
+    }
+  }
+  AuthController_logout: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description The session is over, whether or not it existed */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description The request failed validation; `issues` names the fields */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorDto"]
+        }
+      }
+      /** @description Unexpected server error */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorDto"]
+        }
+      }
+    }
+  }
+  AuthController_me: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["SessionDto_Output"]
+        }
+      }
+      /** @description No access token, or one that no longer verifies */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorDto"]
+        }
+      }
+      /** @description The request failed validation; `issues` names the fields */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorDto"]
+        }
+      }
+      /** @description Unexpected server error */
+      500: {
         headers: {
           [name: string]: unknown
         }

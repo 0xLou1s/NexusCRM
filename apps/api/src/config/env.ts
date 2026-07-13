@@ -13,6 +13,10 @@ export const envSchema = z.object({
   DATABASE_URL: z.url(),
   REDIS_URL: z.url().default("redis://localhost:6379"),
   WEB_ORIGIN: z.url().default("http://localhost:3000"),
+  // Signs the access token (spec §6). No default: a fallback secret is a
+  // forgeable session, and the one thing worse than failing to boot is booting
+  // with an authentication system anyone can sign for.
+  JWT_SECRET: z.string().min(32),
 })
 
 export type Env = z.infer<typeof envSchema>

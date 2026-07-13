@@ -20,14 +20,16 @@
 
 ## PR 1.2 — Auth module
 
-- [ ] `nest g resource auth`
-- [ ] `POST /auth/register` — **only works when zero organizations exist**; creates the org plus its `owner` user, and locks itself afterwards (spec §6.1)
-- [ ] `POST /auth/login` — Argon2 verify, issue access + refresh tokens as httpOnly cookies (`SameSite=Lax`)
-- [ ] `POST /auth/refresh` — **rotation**: revoke the presented token, issue a new pair. A token that is already revoked → revoke every token for that user and return 401 (spec §6)
-- [ ] `POST /auth/logout` — revoke the refresh token, clear the cookies
-- [ ] `GET /auth/me` — the current user plus their org
-- [ ] Tests: bootstrap works once and only once; refresh rotates; a replayed refresh token nukes the whole session; a wrong password never reveals whether the email exists
-- [ ] Run `pnpm gen:api-types`
+- [x] `nest g resource auth`
+- [x] `POST /auth/register` — **only works when zero organizations exist**; creates the org plus its `owner` user, and locks itself afterwards (spec §6.1). A transaction-scoped advisory lock serializes concurrent bootstraps, which both read an empty table otherwise
+- [x] `POST /auth/login` — Argon2 verify, issue access + refresh tokens as httpOnly cookies (`SameSite=Lax`)
+- [x] `POST /auth/refresh` — **rotation**: revoke the presented token, issue a new pair. A token that is already revoked → revoke every token for that user and return 401 (spec §6). The revocation _is_ the lookup — one UPDATE matching only a live token — so two requests racing with the same token cannot both rotate it
+- [x] `POST /auth/logout` — revoke the refresh token, clear the cookies
+- [x] `GET /auth/me` — the current user plus their org, behind a local `JwtAuthGuard` that PR 1.3 promotes to global
+- [x] The refresh token is opaque and stored as a SHA-256 hash, not a JWT: it is checked against `refresh_tokens` on every use, which is what lets rotation revoke it
+- [x] Error keys are split per module — `<module>/<module>.error-keys.ts`, composed into the one catalogue in `common/errors/error-keys.ts`
+- [x] Tests: bootstrap works once and only once (including under a race); refresh rotates; a replayed refresh token nukes the whole session; a wrong password and an unknown email answer byte for byte the same
+- [x] Run `pnpm gen:api-types`
 
 ## PR 1.3 — Guards and org scoping
 

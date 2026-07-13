@@ -1,0 +1,262 @@
+{
+  "info": {
+    "name": "NexusCRM API",
+    "description": "The internal REST API. Import once; every later phase adds requests to it.\n\nThe session lives in two httpOnly cookies (access_token, refresh_token), so there is no token to copy into a header — Postman's cookie jar holds them for the API's host and sends them back on its own. Register or log in once and every other request in this collection is authenticated.\n\nAuto scripts:\n- register/login/refresh store `userId` and `orgId` as collection variables, and assert the session cookies came back httpOnly.\n- a collection-level post-response script answers any 401 outside /auth by calling POST /auth/refresh, so re-sending the request just works. This mirrors what the frontend does (PR 1.4).\n- logout clears the cookie jar, so the next request is genuinely unauthenticated.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3001" },
+    { "key": "organizationName", "value": "Acme" },
+    { "key": "fullName", "value": "Ada Lovelace" },
+    { "key": "email", "value": "ada@example.com" },
+    { "key": "password", "value": "correct-horse-battery" },
+    { "key": "userId", "value": "" },
+    { "key": "orgId", "value": "" }
+  ],
+  "event": [
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// The access token lives 15 minutes. A 401 anywhere outside /auth means it",
+          "// expired, so refresh once and re-send the request — the same thing the",
+          "// frontend's openapi-fetch middleware does.",
+          "const path = pm.request.url.getPath();",
+          "",
+          "if (pm.response.code === 401 && !path.startsWith('/auth')) {",
+          "  pm.sendRequest(",
+          "    { url: `${pm.collectionVariables.get('baseUrl')}/auth/refresh`, method: 'POST' },",
+          "    (error, response) => {",
+          "      if (error || response.code !== 200) {",
+          "        console.log('Refresh failed: the session is over. Log in again.');",
+          "        return;",
+          "      }",
+          "",
+          "      console.log('Access token refreshed. Send the request again.');",
+          "    }",
+          "  );",
+          "}"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "GET /health",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            },
+            "description": "Reads the app_meta row. 503 with `health.appMetaMissing` if the migrations were never applied."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('the API and its database are up', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json().status).to.eql('ok');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "description": "Every response here is a session: { user, organization }. The tokens are cookies and never appear in the body.",
+      "item": [
+        {
+          "name": "POST /auth/register",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"organizationName\": \"{{organizationName}}\",\n  \"fullName\": \"{{fullName}}\",\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            },
+            "description": "Bootstraps the first organization and its owner. Answers exactly once — a second call is 403 `auth.registrationClosed` (spec §6.1). A password under 8 characters is 422, with the failing field named in `issues`."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 403) {",
+                  "  pm.test('registration is closed, as it should be after the first owner', () => {",
+                  "    pm.expect(pm.response.json().code).to.eql('auth.registrationClosed');",
+                  "  });",
+                  "  return;",
+                  "}",
+                  "",
+                  "pm.test('the first owner and their organization exist', () => {",
+                  "  pm.response.to.have.status(201);",
+                  "",
+                  "  const { user, organization } = pm.response.json();",
+                  "  pm.expect(user.role).to.eql('owner');",
+                  "  pm.expect(user).to.not.have.property('passwordHash');",
+                  "",
+                  "  pm.collectionVariables.set('userId', user.id);",
+                  "  pm.collectionVariables.set('orgId', organization.id);",
+                  "});",
+                  "",
+                  "pm.test('the session came back in httpOnly cookies', () => {",
+                  "  const cookies = pm.response.headers.all().filter((h) => h.key.toLowerCase() === 'set-cookie');",
+                  "  pm.expect(cookies).to.have.lengthOf(2);",
+                  "  cookies.forEach((cookie) => pm.expect(cookie.value).to.include('HttpOnly'));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /auth/login",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "401 `auth.invalidCredentials` for both a wrong password and an unknown email — the answer is identical on purpose. 403 `auth.accountDisabled` for a deactivated user."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('logged in', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "",
+                  "  const { user, organization } = pm.response.json();",
+                  "  pm.collectionVariables.set('userId', user.id);",
+                  "  pm.collectionVariables.set('orgId', organization.id);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /auth/me",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "me"]
+            },
+            "description": "The caller and their organization, read from the access token cookie. 401 `common.unauthenticated` without one."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('the cookie identifies the caller', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json().user.id).to.eql(pm.collectionVariables.get('userId'));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /auth/refresh",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/auth/refresh",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "refresh"]
+            },
+            "description": "Rotation: the presented refresh token is revoked and a new pair is issued. Send this twice with the same cookie — by hand, from a cookie you saved — and the second call is 401 `auth.refreshTokenReused`, which revokes every session that user holds (spec §6)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 401) {",
+                  "  pm.test('the session is over', () => {",
+                  "    pm.expect(pm.response.json().code).to.be.oneOf([",
+                  "      'auth.invalidRefreshToken',",
+                  "      'auth.refreshTokenReused',",
+                  "    ]);",
+                  "  });",
+                  "  return;",
+                  "}",
+                  "",
+                  "pm.test('rotated', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json().user.id).to.eql(pm.collectionVariables.get('userId'));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /auth/logout",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "logout"]
+            },
+            "description": "Revokes the refresh token server-side and clears both cookies. 204, whether or not there was a session."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('logged out', () => pm.response.to.have.status(204));",
+                  "",
+                  "// The API clears the cookies, but Postman keeps expired ones in the jar for",
+                  "// the host. Dropping them here is what makes the next request honestly",
+                  "// unauthenticated.",
+                  "const jar = pm.cookies.jar();",
+                  "const host = pm.collectionVariables.get('baseUrl');",
+                  "",
+                  "jar.clear(host, () => console.log('Cookie jar cleared for', host));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

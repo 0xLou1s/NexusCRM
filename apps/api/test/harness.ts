@@ -2,6 +2,7 @@ import type { INestApplication } from "@nestjs/common"
 import { Test } from "@nestjs/testing"
 import type { DatabaseConnection } from "@workspace/db"
 import { AppModule } from "../src/app.module"
+import { configureApp } from "../src/app.setup"
 import { DATABASE_CONNECTION } from "../src/database/database.module"
 
 export interface TestApp {
@@ -19,6 +20,7 @@ export async function createTestApp(): Promise<TestApp> {
   }).compile()
 
   const app = moduleRef.createNestApplication()
+  configureApp(app)
   await app.init()
 
   return {

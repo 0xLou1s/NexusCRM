@@ -1,3 +1,7 @@
+import { AUTH_ERROR_KEYS } from "../../auth/auth.error-keys"
+import { HEALTH_ERROR_KEYS } from "../../health/health.error-keys"
+import { COMMON_ERROR_KEYS, VALIDATION_ERROR_KEYS } from "./common.error-keys"
+
 /**
  * Every error the API can name, as an i18n key.
  *
@@ -6,43 +10,17 @@
  * `t(error.code, error.params)` and never reads `message`, which stays English
  * for logs and for the public API consumers of Phase 11, who have no dictionary.
  *
- * Namespaces are modules: `common` and `validation` are shared by everything,
- * everything else is owned by the module it is named after. A module declares
- * its keys here and its error classes in `<module>/<module>.errors.ts`.
+ * Namespaces are modules. `common` and `validation` are shared by everything and
+ * live next to this file; every other namespace is declared by the module it
+ * names — `<module>/<module>.error-keys.ts`, beside the error classes in
+ * `<module>/<module>.errors.ts` — and is only composed here. A module that grows
+ * a key touches its own file; this one only ever gains a line.
  */
 export const ERROR_KEYS = {
-  common: {
-    internal: "common.internal",
-    validationFailed: "common.validationFailed",
-    responseContractViolation: "common.responseContractViolation",
-    badRequest: "common.badRequest",
-    unauthenticated: "common.unauthenticated",
-    forbidden: "common.forbidden",
-    notFound: "common.notFound",
-    conflict: "common.conflict",
-    tooManyRequests: "common.tooManyRequests",
-    unavailable: "common.unavailable",
-  },
-
-  // One per Zod issue code. The filter derives these from the rejection itself,
-  // so a schema gets field-level i18n without authoring a key per field.
-  validation: {
-    invalidType: "validation.invalidType",
-    invalidValue: "validation.invalidValue",
-    invalidFormat: "validation.invalidFormat",
-    invalidUnion: "validation.invalidUnion",
-    invalidKey: "validation.invalidKey",
-    invalidElement: "validation.invalidElement",
-    tooSmall: "validation.tooSmall",
-    tooBig: "validation.tooBig",
-    notMultipleOf: "validation.notMultipleOf",
-    unrecognizedKeys: "validation.unrecognizedKeys",
-    custom: "validation.custom",
-  },
-
-  health: {
-    appMetaMissing: "health.appMetaMissing",
-  },
+  common: COMMON_ERROR_KEYS,
+  validation: VALIDATION_ERROR_KEYS,
+  auth: AUTH_ERROR_KEYS,
+  health: HEALTH_ERROR_KEYS,
 } as const satisfies Record<string, Record<string, string>>
 
 type Leaves<T> = T extends string
