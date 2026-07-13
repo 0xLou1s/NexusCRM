@@ -32,7 +32,7 @@ export interface paths {
     put?: never
     /**
      * Bootstrap the first organization and its owner
-     * @description Answers exactly once. Every later call is refused — this is a self-hosted instance, not an open sign-up (spec §6.1).
+     * @description Answers exactly once. Every later call is refused: this is a self-hosted instance, not an open sign-up.
      */
     post: operations["AuthController_register"]
     delete?: never
@@ -69,7 +69,7 @@ export interface paths {
     put?: never
     /**
      * Rotate the refresh token and mint a new access token
-     * @description The presented token is revoked and replaced. Presenting one that was already revoked revokes every session that user holds (spec §6).
+     * @description The presented token is revoked and replaced. Presenting one that was already revoked revokes every session that user holds.
      */
     post: operations["AuthController_refresh"]
     delete?: never
