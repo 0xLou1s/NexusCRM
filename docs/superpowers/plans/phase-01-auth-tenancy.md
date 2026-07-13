@@ -10,12 +10,13 @@
 
 ## PR 1.1 — Schema: organizations, users, refresh tokens
 
-- [ ] `packages/db`: `organizations`, `users`, `refresh_tokens` tables per spec §4.1
-- [ ] `role` as a Postgres enum (`owner|admin|member`), not a free-text column
-- [ ] Unique index on `users.email`
-- [ ] Index on `refresh_tokens.token_hash`
-- [ ] Generate and apply the migration
-- [ ] Verify: `db:studio` shows the tables
+- [x] `packages/db`: `organizations`, `users`, `refresh_tokens` tables per spec §4.1
+- [x] `role` as a Postgres enum (`owner|admin|member`), not a free-text column
+- [x] Unique index on `users.email` — across the whole system, not per organization: login is email + password with no tenant selector
+- [x] Index on `refresh_tokens.token_hash`, plus one on `user_id` (reuse detection revokes every token a user holds in one statement)
+- [x] Generate and apply the migration
+- [x] Verify: the tables, indexes and the `user_role` enum are present in Supabase; the migration also replays cleanly into the Testcontainers Postgres, which `pnpm --filter api test` proves
+- [x] Tests: the email unique index, the role enum and the `organizations → users → refresh_tokens` cascade are exercised against a real Postgres
 
 ## PR 1.2 — Auth module
 

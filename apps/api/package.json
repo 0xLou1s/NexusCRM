@@ -25,6 +25,7 @@
     "@workspace/contracts": "workspace:*",
     "@workspace/db": "workspace:*",
     "bullmq": "^5.80.2",
+    "drizzle-orm": "^0.44.7",
     "drizzle-zod": "^0.8.3",
     "ioredis": "^5.11.1",
     "nestjs-zod": "^5.4.0",
