@@ -15,6 +15,13 @@
       "when": 1783906109044,
       "tag": "0001_demonic_white_tiger",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1783942517801,
+      "tag": "0002_salty_saracen",
+      "breakpoints": true
     }
   ]
 }

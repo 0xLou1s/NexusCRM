@@ -4,6 +4,7 @@ import { ConfigModule, ConfigService } from "@nestjs/config"
 import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from "@nestjs/core"
 import { ZodSerializerInterceptor, ZodValidationPipe } from "nestjs-zod"
 import { resolve } from "node:path"
+import { ActivityModule } from "./activity/activity.module"
 import { AuthModule } from "./auth/auth.module"
 import { AllExceptionsFilter } from "./common/errors/all-exceptions.filter"
 import { validateEnv, type Env } from "./config/env"
@@ -31,6 +32,7 @@ import { JobsModule } from "./jobs/jobs.module"
     HealthModule,
     JobsModule,
     AuthModule,
+    ActivityModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: AllExceptionsFilter },

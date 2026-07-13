@@ -55,10 +55,14 @@
 
 ## PR 1.5 — Activity log interceptor
 
-- [ ] `activity_logs` table (spec §4.5)
-- [ ] A global interceptor recording mutating requests (POST/PATCH/DELETE): actor, action, entity, org
-- [ ] It must **never** log request bodies wholesale — passwords and Zalo session blobs pass through here
-- [ ] Test: a login attempt does not write the password into `activity_logs`
+- [x] `activity_logs` table (spec §4.5). Append-only, so no `updated_at`; `user_id` is `set null` on delete, because removing a user must not remove the record of what they did
+- [x] A global interceptor recording mutating requests (POST/PUT/PATCH/DELETE): actor, action, entity, org. Global rather than opt-in — an audit trail with an opt-in is an audit trail with holes in it
+- [x] The action names itself from the route: `POST /contacts` is `contact.create`, `PATCH /contacts/:id` is `contact.update` with the `:id` as its entity. `@LogActivity("contact.assign")` overrides it where the shape of the URL would lie about what happened
+- [x] It runs **downstream of the handler**, so only a mutation that actually happened is recorded: anything that throws leaves through the exception filter and never arrives
+- [x] A failed audit write never fails the request that triggered it — the action already happened, and refusing the caller now would neither undo it nor record it
+- [x] It must **never** log request bodies wholesale — passwords and Zalo session blobs pass through here. The interceptor does not read `request.body` at all, so this is structural rather than a redaction list somebody forgets to add a field to. `details` is left to the routes with something safe to put in it
+- [x] Test: a login attempt does not write the password into `activity_logs` — and, more strongly, a mutation carrying a secret in its body records `details = {}` with the secret nowhere in the row
+- [x] Run `pnpm gen:api-types` — no diff: an interceptor adds no endpoint
 
 ---
 
@@ -70,7 +74,7 @@
 
 ## Definition of done
 
-- [ ] The first owner registers; a second registration attempt is rejected
-- [ ] Login persists across reloads; logout actually revokes server-side
-- [ ] Every non-`@Public()` endpoint 401s without a cookie
-- [ ] A replayed refresh token invalidates the whole session
+- [x] The first owner registers; a second registration attempt is rejected — including under a race, which the advisory lock is what settles (`test/auth.spec.ts`)
+- [x] Login persists across reloads; logout actually revokes server-side (`test/auth.spec.ts`, `apps/web/test`)
+- [x] Every non-`@Public()` endpoint 401s without a cookie (`test/guards.spec.ts`)
+- [x] A replayed refresh token invalidates the whole session (`test/auth.spec.ts`)
