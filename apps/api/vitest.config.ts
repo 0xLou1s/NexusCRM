@@ -28,6 +28,11 @@ export default defineConfig({
           environment: "node",
           globalSetup: ["./test/containers.ts"],
           setupFiles: ["./test/env.ts"],
+          // One Postgres for the whole project, and truncateAll() empties every
+          // table in it — so two files running at once wipe each other's rows
+          // mid-test. Files run one after another; the tests inside a file still
+          // share one app and one boot.
+          fileParallelism: false,
           // Long enough to pull the Postgres and Redis images on a cold machine.
           hookTimeout: 180_000,
           testTimeout: 30_000,

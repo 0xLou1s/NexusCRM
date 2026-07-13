@@ -19,6 +19,13 @@ export const config = [
     },
     rules: {
       "turbo/no-undeclared-env-vars": "warn",
+      // Dropping a field by destructuring it away — `const { passwordHash,
+      // ...user } = row` — is the one way to omit it without restating every
+      // other column. The binding is unused by construction.
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        { ignoreRestSiblings: true },
+      ],
     },
   },
   {

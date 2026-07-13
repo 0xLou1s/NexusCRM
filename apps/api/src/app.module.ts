@@ -4,6 +4,7 @@ import { ConfigModule, ConfigService } from "@nestjs/config"
 import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from "@nestjs/core"
 import { ZodSerializerInterceptor, ZodValidationPipe } from "nestjs-zod"
 import { resolve } from "node:path"
+import { AuthModule } from "./auth/auth.module"
 import { AllExceptionsFilter } from "./common/errors/all-exceptions.filter"
 import { validateEnv, type Env } from "./config/env"
 import { DatabaseModule } from "./database/database.module"
@@ -29,6 +30,7 @@ import { JobsModule } from "./jobs/jobs.module"
     DatabaseModule,
     HealthModule,
     JobsModule,
+    AuthModule,
   ],
   providers: [
     // Every failure leaves through here, in one shape (spec §7).
