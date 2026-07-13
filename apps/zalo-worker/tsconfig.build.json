@@ -1,4 +1,7 @@
 {
   "extends": "./tsconfig.json",
-  "exclude": ["node_modules", "dist", "**/*spec.ts"]
+  // vitest.config.ts is typechecked but must stay out of the build: it sits at
+  // the package root, and including it would push rootDir up a level and emit
+  // dist/src/main.js instead of dist/main.js.
+  "exclude": ["node_modules", "dist", "**/*spec.ts", "vitest.config.ts"]
 }

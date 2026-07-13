@@ -1,5 +1,6 @@
 import { Logger } from "@nestjs/common"
 import type { Job } from "bullmq"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 import { ZodError } from "zod"
 import { JobsService } from "./jobs.service"
 
@@ -13,7 +14,7 @@ describe("JobsService", () => {
   })
 
   it("consumes zalo.noop and logs the parsed payload", async () => {
-    const log = jest.spyOn(Logger.prototype, "log").mockImplementation()
+    const log = vi.spyOn(Logger.prototype, "log").mockImplementation(() => {})
 
     await service.process(
       asJob("zalo.noop", { enqueuedAt: "2026-07-12T00:00:00.000Z" })

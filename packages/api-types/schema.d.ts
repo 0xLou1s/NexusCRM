@@ -35,6 +35,11 @@ export interface components {
         updatedAt: string
       }
     }
+    ApiErrorDto: {
+      code: string
+      message: string
+      details?: unknown
+    }
   }
   responses: never
   parameters: never
@@ -59,6 +64,33 @@ export interface operations {
         }
         content: {
           "application/json": components["schemas"]["HealthDto_Output"]
+        }
+      }
+      /** @description The request failed validation */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorDto"]
+        }
+      }
+      /** @description Unexpected server error */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorDto"]
+        }
+      }
+      /** @description The database is reachable but has not been migrated */
+      503: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorDto"]
         }
       }
     }

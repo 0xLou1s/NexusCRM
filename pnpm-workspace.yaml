@@ -12,3 +12,12 @@ allowBuilds:
   msw: false
   # Telemetry that ships with @nestjs/swagger. Denied, not merely unapproved.
   "@scarf/scarf": false
+  # SWC resolves its binary through platform-specific optional dependencies; the
+  # postinstall only reports when none matched, and the Vitest transform works
+  # without it.
+  "@swc/core": false
+  # Testcontainers reaches Docker over a unix socket, never over SSH, so ssh2's
+  # optional native crypto (cpu-features) is never on the path.
+  ssh2: false
+  cpu-features: false
+  protobufjs: false

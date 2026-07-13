@@ -6,10 +6,8 @@ export default [
   ...baseConfig,
   {
     languageOptions: {
-      globals: {
-        ...globals.node,
-        ...globals.jest,
-      },
+      // No test globals: Vitest's describe/it/expect are imported explicitly.
+      globals: globals.node,
     },
   },
 ]
