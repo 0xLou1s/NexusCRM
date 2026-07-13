@@ -1,10 +1,17 @@
 # Postman
 
-`nexuscrm.postman_collection.json` — import it once (Postman → Import → File). Every later phase adds requests to the same file rather than shipping a new one.
+Import both files once (Postman → Import → Files). Every later phase adds requests to the same collection rather than shipping a new one.
+
+- `nexuscrm.postman_collection.json` — the requests.
+- `nexuscrm-local.postman_environment.json` — the machine they run against, plus the credentials the auth requests send. Select it in the environment picker, top right.
 
 ## Before you start
 
-Run the API: `pnpm --filter api dev`. The collection points at `http://localhost:3001` through the `baseUrl` collection variable; change that one value to talk to a deployed environment.
+Run the API: `pnpm --filter api dev`. The environment points `baseUrl` at `http://localhost:3001`; duplicate it and change that one value to talk to a deployed API. The collection carries the same defaults, so it also works with no environment selected — an environment wins over a collection variable of the same name, which is exactly what makes staging a copy of one file.
+
+`userId` and `orgId` are deliberately **not** in the environment: the test scripts write them as collection variables after a login, and an environment variable of the same name would shadow what they wrote.
+
+`password` is stored as a `secret` variable, so Postman keeps it out of exports and out of shared workspaces.
 
 ## The session is a cookie, not a header
 
