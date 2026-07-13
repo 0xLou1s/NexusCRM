@@ -11,10 +11,9 @@ declare module "vitest" {
   }
 }
 
-// A real Postgres, because what is worth testing about the database — unique
-// constraints, partial indexes, cascade rules — is exactly what a mock cannot
-// fail (spec §7). Redis comes with it: AppModule opens a BullMQ connection at
-// boot, so without one the real module cannot be booted at all.
+// A real Postgres, because unique constraints and cascade rules are exactly what
+// a mock cannot fail. Redis comes with it: AppModule opens a BullMQ connection
+// at boot, so without one the real module cannot be booted at all.
 export default async function setup(project: TestProject) {
   const [postgres, redis] = await Promise.all([
     new PostgreSqlContainer("postgres:17-alpine").start(),

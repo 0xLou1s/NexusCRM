@@ -15,8 +15,8 @@ import { ERROR_KEYS, type ErrorKey } from "./error-keys"
 import { toErrorIssue } from "./zod-issue"
 
 const STATUS_BY_KIND: Record<DomainErrorKind, HttpStatus> = {
-  // 422, not 400: the request parsed fine, it is its contents that are wrong.
-  // 400 is left to Nest, for a body it could not read at all.
+  // 422, not 400: the request parsed, its contents are wrong. 400 is left to
+  // Nest, for a body it could not read at all.
   invalid: HttpStatus.UNPROCESSABLE_ENTITY,
   unauthenticated: HttpStatus.UNAUTHORIZED,
   forbidden: HttpStatus.FORBIDDEN,
@@ -26,9 +26,8 @@ const STATUS_BY_KIND: Record<DomainErrorKind, HttpStatus> = {
   unavailable: HttpStatus.SERVICE_UNAVAILABLE,
 }
 
-// Nest throws its own exceptions before any of our code runs — an unmatched
-// route, a body it cannot parse. They answer in the same vocabulary as a domain
-// error, so the frontend has one thing to translate rather than two.
+// Nest throws its own exceptions before any of our code runs. They answer in the
+// same vocabulary as a domain error, so the frontend has one thing to translate.
 const KEY_BY_STATUS: Record<number, ErrorKey | undefined> = {
   [HttpStatus.BAD_REQUEST]: ERROR_KEYS.common.badRequest,
   [HttpStatus.UNAUTHORIZED]: ERROR_KEYS.common.unauthenticated,
@@ -43,7 +42,7 @@ const KEY_BY_STATUS: Record<number, ErrorKey | undefined> = {
 interface Failure {
   status: number
   body: ApiError
-  // Logged, never sent: a 5xx is a bug on our side, not information for the caller.
+  // Logged, never sent.
   cause?: unknown
 }
 

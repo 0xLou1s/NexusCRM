@@ -1,6 +1,3 @@
-// The two namespaces no module owns: anything can fail this way. Every other
-// namespace is declared by the module it names and composed in error-keys.ts.
-
 export const COMMON_ERROR_KEYS = {
   internal: "common.internal",
   validationFailed: "common.validationFailed",
@@ -14,8 +11,8 @@ export const COMMON_ERROR_KEYS = {
   unavailable: "common.unavailable",
 } as const
 
-// One per Zod issue code. The filter derives these from the rejection itself, so
-// a schema gets field-level i18n without anyone authoring a key per field.
+// One per Zod issue code, so a schema gets field-level i18n without anyone
+// authoring a key per field.
 export const VALIDATION_ERROR_KEYS = {
   invalidType: "validation.invalidType",
   invalidValue: "validation.invalidValue",

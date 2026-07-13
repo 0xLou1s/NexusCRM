@@ -19,8 +19,8 @@ import { JwtAuthGuard } from "./guards/jwt-auth.guard"
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtAuthGuard],
-  // JwtModule is exported with the guard: PR 1.3 promotes it to a global
-  // APP_GUARD, and a guard cannot inject a JwtService its module cannot see.
+  // JwtModule travels with the guard: an importing module cannot inject a
+  // JwtService it cannot see.
   exports: [AuthService, JwtAuthGuard, JwtModule],
 })
 export class AuthModule {}

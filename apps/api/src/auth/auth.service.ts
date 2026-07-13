@@ -29,15 +29,14 @@ import type { RegisterDto } from "./dto/register.dto"
 import { toPublicUser, type PublicUser } from "./dto/session.dto"
 import { generateRefreshToken, hashRefreshToken } from "./refresh-token"
 
-// Verified against when the email is unknown, so an account that does not exist
-// costs the same time as a wrong password. Skipping the hash would answer in a
-// fraction of the time, and that difference alone enumerates accounts.
+// Verified against when the email is unknown, so an unknown account costs the
+// same time as a wrong password. Skipping the hash would answer in a fraction of
+// the time, and that difference alone enumerates accounts.
 const ABSENT_USER_PASSWORD_HASH = hashSync(randomBytes(32).toString("hex"))
 
-// Bootstrapping reads `organizations` and then writes to it, so two concurrent
-// registrations would both find it empty and both create one. This serializes
-// them. Transaction-scoped on purpose: a session-scoped lock would be pinned to
-// a pooled connection and outlive the request that took it.
+// Serializes the bootstrap, which reads `organizations` and then writes to it.
+// Transaction-scoped: a session-scoped lock would be pinned to a pooled
+// connection and outlive the request that took it.
 const REGISTRATION_LOCK_KEY = 4_675_301
 
 export interface Session {
@@ -136,9 +135,7 @@ export class AuthService {
   }
 
   /**
-   * Rotation (spec §6): the presented token is revoked and a new pair is issued.
-   *
-   * The revocation *is* the lookup — a single UPDATE that only matches a token
+   * The revocation is the lookup: a single UPDATE that only matches a token
    * still live. Two requests racing with the same token cannot both come away
    * with a new pair, because only one of them gets a row back.
    */
@@ -161,8 +158,6 @@ export class AuthService {
       )
       .returning()
 
-    // Nothing to claim: either the token was never issued, or it was already
-    // spent and is being replayed.
     if (!claimed) {
       await this.revokeEverythingIfReused(tokenHash)
 
@@ -178,8 +173,8 @@ export class AuthService {
     return this.issueSession(user, organization, context)
   }
 
-  // Idempotent, and it never reports whether the token existed: a logout that
-  // says "unknown token" is a logout that confirms tokens.
+  // Never reports whether the token existed: a logout that says "unknown token"
+  // is a logout that confirms tokens.
   async logout(token: string | undefined): Promise<void> {
     if (!token) return
 
@@ -200,11 +195,8 @@ export class AuthService {
     return { user: toPublicUser(user), organization }
   }
 
-  /**
-   * A token that exists but could not be claimed was already spent, and its
-   * holder still has it — which means it was copied. Every session that user
-   * holds dies (spec §6).
-   */
+  // A token that exists but could not be claimed was already spent, and its
+  // holder still has it — so it was copied.
   private async revokeEverythingIfReused(tokenHash: string): Promise<void> {
     const [known] = await this.connection.db
       .select({ userId: refreshTokens.userId })
@@ -266,8 +258,8 @@ export class AuthService {
       .where(eq(users.id, userId))
       .limit(1)
 
-    // The access token is signed, so its subject was a real user once. A row
-    // that is gone means the session is over, not that the caller got it wrong.
+    // The token is signed, so its subject was a real user once: a row that is
+    // gone means the session is over, not that the caller got it wrong.
     if (!row) {
       throw new UnauthenticatedError("The session's user no longer exists")
     }
@@ -282,8 +274,8 @@ function normalizeEmail(email: string): string {
   return email.trim().toLowerCase()
 }
 
-// INSERT ... RETURNING always yields the row it just wrote. The guard is here
-// because the array type cannot say so.
+// INSERT ... RETURNING always yields the row it wrote; the array type cannot say
+// so.
 function inserted<T>(rows: T[]): T {
   const [row] = rows
 

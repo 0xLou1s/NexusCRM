@@ -18,23 +18,18 @@ const HTTP_METHODS = [
   "options",
 ] as const
 
-// Reachable from every operation, whatever it does: the validation pipe rejects
-// the request's own contents before the handler runs, and anything unhandled
-// inside it leaves as a 500. Documented once here so no endpoint has to
-// remember to. Every status reuses ApiErrorDto, so the frontend's `error` is one
-// type rather than a union it has to narrow before reading `issues`.
+// Reachable from every operation, whatever it does: the validation pipe runs
+// before the handler, and anything unhandled inside it leaves as a 500.
 const UNIVERSAL_ERRORS: Record<string, string> = {
   "422": "The request failed validation; `issues` names the fields",
   "500": "Unexpected server error",
 }
 
 /**
- * The one definition of the OpenAPI document.
- *
  * The Swagger UI at `/docs` and the document at `/openapi.json` — which
  * `gen:api-types` turns into the frontend's types — are the same object, so the
- * API a developer reads about and the API the frontend compiles against cannot
- * be different APIs.
+ * API a developer reads about cannot differ from the one the frontend compiles
+ * against.
  *
  * `cleanupOpenApiDoc` is nestjs-zod's post-processing step; without it the Zod
  * schemas reach the document as unusable placeholders.
