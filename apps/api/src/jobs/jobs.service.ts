@@ -1,11 +1,17 @@
 import { InjectQueue } from "@nestjs/bullmq"
-import { Injectable, Logger, type OnApplicationBootstrap } from "@nestjs/common"
+import {
+  Injectable,
+  Logger,
+  type OnApplicationBootstrap,
+  type OnModuleDestroy,
+} from "@nestjs/common"
 import { QUEUE_NAMES, type JobPayload } from "@workspace/contracts"
 import type { Queue } from "bullmq"
 
 @Injectable()
-export class JobsService implements OnApplicationBootstrap {
+export class JobsService implements OnApplicationBootstrap, OnModuleDestroy {
   private readonly logger = new Logger(JobsService.name)
+  private enqueuing: Promise<void> = Promise.resolve()
 
   constructor(
     @InjectQueue(QUEUE_NAMES.zalo) private readonly zaloQueue: Queue
@@ -14,7 +20,15 @@ export class JobsService implements OnApplicationBootstrap {
   onApplicationBootstrap(): void {
     // Not awaited: `gen:api-types` boots the app with no Redis in reach, and
     // boot must not block on it.
-    void this.enqueueNoop()
+    this.enqueuing = this.enqueueNoop()
+  }
+
+  // @nestjs/bullmq closes the queue in onApplicationShutdown, which runs after
+  // this. Settling the in-flight enqueue here is what stops a shutdown mid-add
+  // from leaving a BullMQ command rejecting against a connection that is already
+  // gone, with nobody left to catch it.
+  async onModuleDestroy(): Promise<void> {
+    await this.enqueuing
   }
 
   async enqueueNoop(): Promise<void> {

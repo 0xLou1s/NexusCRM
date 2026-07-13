@@ -45,7 +45,7 @@ describe("GET /health", () => {
       .expect(HttpStatus.SERVICE_UNAVAILABLE)
 
     expect(response.body).toEqual({
-      code: "APP_META_MISSING",
+      code: "health.appMetaMissing",
       message: expect.any(String),
     })
   })

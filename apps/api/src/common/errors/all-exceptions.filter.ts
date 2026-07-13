@@ -11,15 +11,33 @@ import { ZodSerializationException, ZodValidationException } from "nestjs-zod"
 import { ZodError } from "zod"
 import type { ApiError } from "./api-error.dto"
 import { DomainError, type DomainErrorKind } from "./domain-error"
+import { ERROR_KEYS, type ErrorKey } from "./error-keys"
+import { toErrorIssue } from "./zod-issue"
 
 const STATUS_BY_KIND: Record<DomainErrorKind, HttpStatus> = {
-  invalid: HttpStatus.BAD_REQUEST,
+  // 422, not 400: the request parsed fine, it is its contents that are wrong.
+  // 400 is left to Nest, for a body it could not read at all.
+  invalid: HttpStatus.UNPROCESSABLE_ENTITY,
   unauthenticated: HttpStatus.UNAUTHORIZED,
   forbidden: HttpStatus.FORBIDDEN,
   not_found: HttpStatus.NOT_FOUND,
   conflict: HttpStatus.CONFLICT,
   quota_exceeded: HttpStatus.TOO_MANY_REQUESTS,
   unavailable: HttpStatus.SERVICE_UNAVAILABLE,
+}
+
+// Nest throws its own exceptions before any of our code runs — an unmatched
+// route, a body it cannot parse. They answer in the same vocabulary as a domain
+// error, so the frontend has one thing to translate rather than two.
+const KEY_BY_STATUS: Record<number, ErrorKey | undefined> = {
+  [HttpStatus.BAD_REQUEST]: ERROR_KEYS.common.badRequest,
+  [HttpStatus.UNAUTHORIZED]: ERROR_KEYS.common.unauthenticated,
+  [HttpStatus.FORBIDDEN]: ERROR_KEYS.common.forbidden,
+  [HttpStatus.NOT_FOUND]: ERROR_KEYS.common.notFound,
+  [HttpStatus.CONFLICT]: ERROR_KEYS.common.conflict,
+  [HttpStatus.UNPROCESSABLE_ENTITY]: ERROR_KEYS.common.validationFailed,
+  [HttpStatus.TOO_MANY_REQUESTS]: ERROR_KEYS.common.tooManyRequests,
+  [HttpStatus.SERVICE_UNAVAILABLE]: ERROR_KEYS.common.unavailable,
 }
 
 interface Failure {
@@ -53,18 +71,24 @@ export class AllExceptionsFilter implements ExceptionFilter {
         body: {
           code: exception.code,
           message: exception.message,
-          details: exception.details,
+          params: exception.params,
+          issues: exception.issues,
         },
       }
     }
 
     if (exception instanceof ZodValidationException) {
+      const error = exception.getZodError()
+
       return {
-        status: HttpStatus.BAD_REQUEST,
+        status: HttpStatus.UNPROCESSABLE_ENTITY,
         body: {
-          code: "VALIDATION_FAILED",
-          message: "Request failed validation",
-          details: issuesOf(exception.getZodError()),
+          code: ERROR_KEYS.common.validationFailed,
+          message: "The request failed validation",
+          issues:
+            error instanceof ZodError
+              ? error.issues.map(toErrorIssue)
+              : undefined,
         },
       }
     }
@@ -75,7 +99,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       return {
         status: HttpStatus.INTERNAL_SERVER_ERROR,
         body: {
-          code: "RESPONSE_CONTRACT_VIOLATION",
+          code: ERROR_KEYS.common.responseContractViolation,
           message: "The API produced a response that violates its own contract",
         },
         cause: exception.getZodError(),
@@ -86,35 +110,22 @@ export class AllExceptionsFilter implements ExceptionFilter {
       const status = exception.getStatus()
       return {
         status,
-        body: { code: codeFor(status), message: exception.message },
+        body: {
+          code: KEY_BY_STATUS[status] ?? ERROR_KEYS.common.internal,
+          message: exception.message,
+        },
         cause: exception,
       }
     }
 
     return {
       status: HttpStatus.INTERNAL_SERVER_ERROR,
-      body: { code: "INTERNAL_SERVER_ERROR", message: "Internal server error" },
+      body: {
+        code: ERROR_KEYS.common.internal,
+        message: "Internal server error",
+      },
       cause: exception,
     }
-  }
-}
-
-// HttpStatus is a numeric enum, so it reverse-maps a status onto its own name:
-// 404 -> "NOT_FOUND". Nest's own exceptions — an unmatched route, a guard
-// rejecting — then reach the client in the same vocabulary as domain errors.
-function codeFor(status: number): string {
-  return HttpStatus[status] ?? "INTERNAL_SERVER_ERROR"
-}
-
-function issuesOf(error: unknown): ApiError["details"] {
-  if (!(error instanceof ZodError)) return undefined
-
-  return {
-    issues: error.issues.map((issue) => ({
-      path: issue.path.map(String).join("."),
-      message: issue.message,
-      code: issue.code,
-    })),
   }
 }
 

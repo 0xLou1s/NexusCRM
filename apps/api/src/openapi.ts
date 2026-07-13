@@ -19,10 +19,12 @@ const HTTP_METHODS = [
 ] as const
 
 // Reachable from every operation, whatever it does: the validation pipe rejects
-// a malformed request before the handler runs, and anything unhandled inside it
-// leaves as a 500. Documented once here so that no endpoint has to remember to.
+// the request's own contents before the handler runs, and anything unhandled
+// inside it leaves as a 500. Documented once here so no endpoint has to
+// remember to. Every status reuses ApiErrorDto, so the frontend's `error` is one
+// type rather than a union it has to narrow before reading `issues`.
 const UNIVERSAL_ERRORS: Record<string, string> = {
-  "400": "The request failed validation",
+  "422": "The request failed validation; `issues` names the fields",
   "500": "Unexpected server error",
 }
 
