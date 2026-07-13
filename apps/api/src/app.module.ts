@@ -1,9 +1,10 @@
 import { BullModule } from "@nestjs/bullmq"
 import { Module } from "@nestjs/common"
 import { ConfigModule, ConfigService } from "@nestjs/config"
-import { APP_INTERCEPTOR, APP_PIPE } from "@nestjs/core"
+import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from "@nestjs/core"
 import { ZodSerializerInterceptor, ZodValidationPipe } from "nestjs-zod"
 import { resolve } from "node:path"
+import { AllExceptionsFilter } from "./common/errors/all-exceptions.filter"
 import { validateEnv, type Env } from "./config/env"
 import { DatabaseModule } from "./database/database.module"
 import { HealthModule } from "./health/health.module"
@@ -30,6 +31,8 @@ import { JobsModule } from "./jobs/jobs.module"
     JobsModule,
   ],
   providers: [
+    // Every failure leaves through here, in one shape (spec §7).
+    { provide: APP_FILTER, useClass: AllExceptionsFilter },
     // Requests are parsed by the Zod schema behind each DTO...
     { provide: APP_PIPE, useClass: ZodValidationPipe },
     // ...and responses are re-parsed by it on the way out, so a handler that

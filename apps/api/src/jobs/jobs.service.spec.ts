@@ -2,14 +2,15 @@ import { getQueueToken } from "@nestjs/bullmq"
 import { Logger } from "@nestjs/common"
 import { Test, TestingModule } from "@nestjs/testing"
 import { jobSchemas, QUEUE_NAMES } from "@workspace/contracts"
+import { beforeEach, describe, expect, it, vi, type Mock } from "vitest"
 import { JobsService } from "./jobs.service"
 
 describe("JobsService", () => {
   let service: JobsService
-  let add: jest.Mock
+  let add: Mock
 
   beforeEach(async () => {
-    add = jest.fn().mockResolvedValue(undefined)
+    add = vi.fn().mockResolvedValue(undefined)
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         JobsService,
@@ -30,7 +31,9 @@ describe("JobsService", () => {
   })
 
   it("resolves even when the queue is unreachable, so boot never blocks on Redis", async () => {
-    const error = jest.spyOn(Logger.prototype, "error").mockImplementation()
+    const error = vi
+      .spyOn(Logger.prototype, "error")
+      .mockImplementation(() => {})
     add.mockRejectedValueOnce(new Error("connect ECONNREFUSED"))
 
     await expect(service.enqueueNoop()).resolves.toBeUndefined()

@@ -80,13 +80,13 @@
 
 Both of these belong here, not in Phase 1. If they arrive later, every endpoint written before them invents its own error shape and its own test setup, and you spend Phase 2 unifying them.
 
-- [ ] `AllExceptionsFilter` returning exactly one error shape: `{ code, message, details? }` (spec §7)
-- [ ] A `DomainError` base class; the filter maps subclasses to HTTP statuses. **Services never throw `HttpException` directly** — that couples business logic to the transport
-- [ ] Register the error shape as a Swagger response schema so `schema.d.ts` gives the frontend a type for errors too
-- [ ] Vitest configured across the workspace
-- [ ] A Testcontainers harness spinning up a **real Postgres** for integration tests, with migrations applied and truncation between tests (spec §7). The database is not mocked: unique constraints and partial indexes are precisely what needs testing, and a mock cannot fail them.
-- [ ] One integration test proving the harness works (hit `/health` against the containerized database)
-- [ ] Verify: `pnpm test` runs unit and integration suites; CI runs both
+- [x] `AllExceptionsFilter` returning exactly one error shape: `{ code, message, details? }` (spec §7)
+- [x] A `DomainError` base class; the filter maps subclasses to HTTP statuses. **Services never throw `HttpException` directly** — that couples business logic to the transport. A subclass declares a `kind` (`not_found`, `conflict`, `quota_exceeded`, …) and the filter owns the `kind` → status table, so the domain layer never names HTTP at all
+- [x] Register the error shape as a Swagger response schema so `schema.d.ts` gives the frontend a type for errors too. `400` and `500` are attached to **every** operation in `apps/api/src/openapi.ts` — reachable from any endpoint, so no endpoint has to remember to declare them; an endpoint adds the statuses only it can produce (`/health` adds `503`)
+- [x] Vitest configured across the workspace — `apps/api` and `apps/zalo-worker`, the two packages that have tests. Nest reads constructor types off `design:paramtypes`, which Vite's own transform does not emit, so both configs run `unplugin-swc` with `oxc: false`
+- [x] A Testcontainers harness spinning up a **real Postgres** for integration tests, with migrations applied and truncation between tests (spec §7). The database is not mocked: unique constraints and partial indexes are precisely what needs testing, and a mock cannot fail them. Redis is started alongside it, because `AppModule` opens a BullMQ connection at boot and the test boots the real module
+- [x] One integration test proving the harness works (hit `/health` against the containerized database)
+- [x] Verify: `pnpm test` runs unit and integration suites; CI runs both
 
 ---
 

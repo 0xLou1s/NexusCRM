@@ -1,10 +1,30 @@
 import type { INestApplication } from "@nestjs/common"
 import {
   DocumentBuilder,
+  getSchemaPath,
   SwaggerModule,
   type OpenAPIObject,
 } from "@nestjs/swagger"
 import { cleanupOpenApiDoc } from "nestjs-zod"
+import { ApiErrorDto } from "./common/errors/api-error.dto"
+
+const HTTP_METHODS = [
+  "get",
+  "post",
+  "put",
+  "patch",
+  "delete",
+  "head",
+  "options",
+] as const
+
+// Reachable from every operation, whatever it does: the validation pipe rejects
+// a malformed request before the handler runs, and anything unhandled inside it
+// leaves as a 500. Documented once here so that no endpoint has to remember to.
+const UNIVERSAL_ERRORS: Record<string, string> = {
+  "400": "The request failed validation",
+  "500": "Unexpected server error",
+}
 
 /**
  * The one definition of the OpenAPI document.
@@ -26,5 +46,32 @@ export function buildOpenApiDocument(app: INestApplication): OpenAPIObject {
     .setVersion("0.1.0")
     .build()
 
-  return cleanupOpenApiDoc(SwaggerModule.createDocument(app, config))
+  const document = SwaggerModule.createDocument(app, config, {
+    extraModels: [ApiErrorDto],
+  })
+
+  // Before the cleanup, not after: cleanupOpenApiDoc is what rewrites $refs, so
+  // the references added here are rewritten along with the rest.
+  return cleanupOpenApiDoc(withUniversalErrors(document))
+}
+
+function withUniversalErrors(document: OpenAPIObject): OpenAPIObject {
+  const schema = { $ref: getSchemaPath(ApiErrorDto) }
+
+  for (const item of Object.values(document.paths)) {
+    for (const method of HTTP_METHODS) {
+      const operation = item[method]
+      if (!operation) continue
+
+      for (const [status, description] of Object.entries(UNIVERSAL_ERRORS)) {
+        // An operation that documents the status itself keeps its own wording.
+        operation.responses[status] ??= {
+          description,
+          content: { "application/json": { schema } },
+        }
+      }
+    }
+  }
+
+  return document
 }

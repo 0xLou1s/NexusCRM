@@ -34,6 +34,9 @@ jobs:
           # the value only has to parse as a URL.
           API_URL: http://localhost:3001
 
+      # apps/api's integration suite starts Postgres and Redis through
+      # Testcontainers, so this step needs a working Docker daemon — which
+      # ubuntu-latest provides. A runner without one cannot run `test`.
       - run: pnpm turbo run lint typecheck test
 
   type-drift:
