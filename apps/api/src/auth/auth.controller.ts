@@ -26,8 +26,8 @@ import { JwtAuthGuard } from "./guards/jwt-auth.guard"
 
 @Controller("auth")
 export class AuthController {
-  // Only marked `secure` in production: development is plain HTTP, where a
-  // secure cookie is a cookie the browser accepts and never sends back.
+  // Development is plain HTTP, where a secure cookie is one the browser accepts
+  // and never sends back.
   private readonly secureCookies: boolean
 
   constructor(
@@ -42,7 +42,7 @@ export class AuthController {
   @ApiOperation({
     summary: "Bootstrap the first organization and its owner",
     description:
-      "Answers exactly once. Every later call is refused — this is a self-hosted instance, not an open sign-up (spec §6.1).",
+      "Answers exactly once. Every later call is refused: this is a self-hosted instance, not an open sign-up.",
   })
   @ZodResponse({ status: HttpStatus.CREATED, type: SessionDto })
   @ApiResponse({
@@ -98,7 +98,7 @@ export class AuthController {
   @ApiOperation({
     summary: "Rotate the refresh token and mint a new access token",
     description:
-      "The presented token is revoked and replaced. Presenting one that was already revoked revokes every session that user holds (spec §6).",
+      "The presented token is revoked and replaced. Presenting one that was already revoked revokes every session that user holds.",
   })
   @ZodResponse({ status: HttpStatus.OK, type: SessionDto })
   @ApiResponse({
@@ -120,9 +120,8 @@ export class AuthController {
 
       return issued.session
     } catch (error) {
-      // A refresh that fails is a session that is over. Leaving the cookies in
-      // place would have the browser replay a dead token on every request from
-      // here on.
+      // Cookies left in place would have the browser replay a dead token on
+      // every request from here on.
       clearSessionCookies(response, this.secureCookies)
 
       throw error
@@ -155,8 +154,6 @@ export class AuthController {
     type: ApiErrorDto,
   })
   async me(@Req() request: AuthenticatedRequest) {
-    // The guard ran, so this is set. PR 1.3 replaces the reach into the request
-    // with a @CurrentUser() decorator, and the check goes with it.
     if (!request.user) throw new Error("JwtAuthGuard attached no user")
 
     return this.authService.readSession(request.user.id)
@@ -169,8 +166,6 @@ function readRefreshToken(request: AuthenticatedRequest): string | undefined {
   return typeof token === "string" ? token : undefined
 }
 
-// Recorded on the refresh token row, so a session can be told apart from the
-// others a user holds once one of them turns out to be stolen.
 function contextOf(request: AuthenticatedRequest): SessionContext {
   return {
     userAgent: request.get("user-agent") ?? null,

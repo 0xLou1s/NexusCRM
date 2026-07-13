@@ -42,9 +42,6 @@ describe("JobsService", () => {
     error.mockRestore()
   })
 
-  // Boot fires the enqueue without awaiting it. If shutdown did not wait for it,
-  // BullMQ would be left with a command rejecting against a closed connection
-  // and nobody to catch it — an unhandled rejection on every fast restart.
   it("waits for an in-flight enqueue before the queue is torn down", async () => {
     let settle: () => void = () => {}
     add.mockReturnValueOnce(

@@ -4,8 +4,8 @@ import {
 } from "../common/errors/domain-error"
 import { ERROR_KEYS, type ErrorKey } from "../common/errors/error-keys"
 
-// One error for both "no such email" and "wrong password". Two would turn the
-// login form into an account enumerator (spec §6).
+// Never split into "no such email" and "wrong password": two errors turn the
+// login form into an account enumerator.
 export class InvalidCredentialsError extends DomainError {
   readonly kind: DomainErrorKind = "unauthenticated"
   readonly code: ErrorKey = ERROR_KEYS.auth.invalidCredentials
@@ -19,8 +19,6 @@ export class EmailAlreadyTakenError extends DomainError {
   readonly kind: DomainErrorKind = "conflict"
   readonly code: ErrorKey = ERROR_KEYS.auth.emailAlreadyTaken
 
-  // The rule is about a field, so it rides in `issues` and the form prints it
-  // under the email input — the same code path a Zod rejection takes.
   constructor() {
     const message = "That email is already registered"
 
@@ -36,8 +34,6 @@ export class EmailAlreadyTakenError extends DomainError {
   }
 }
 
-// Registration is the bootstrap of the first organization, not a sign-up form:
-// it answers exactly once, and refuses forever after (spec §6.1).
 export class RegistrationClosedError extends DomainError {
   readonly kind: DomainErrorKind = "forbidden"
   readonly code: ErrorKey = ERROR_KEYS.auth.registrationClosed
@@ -56,8 +52,6 @@ export class InvalidRefreshTokenError extends DomainError {
   }
 }
 
-// A revoked token being presented means the previous holder still has it, which
-// means it was stolen. Every session for that user dies (spec §6).
 export class RefreshTokenReusedError extends DomainError {
   readonly kind: DomainErrorKind = "unauthenticated"
   readonly code: ErrorKey = ERROR_KEYS.auth.refreshTokenReused

@@ -24,9 +24,8 @@ export class JobsService implements OnApplicationBootstrap, OnModuleDestroy {
   }
 
   // @nestjs/bullmq closes the queue in onApplicationShutdown, which runs after
-  // this. Settling the in-flight enqueue here is what stops a shutdown mid-add
-  // from leaving a BullMQ command rejecting against a connection that is already
-  // gone, with nobody left to catch it.
+  // this. Without settling here, a shutdown mid-add leaves a BullMQ command
+  // rejecting against a closed connection, with nobody left to catch it.
   async onModuleDestroy(): Promise<void> {
     await this.enqueuing
   }

@@ -19,11 +19,9 @@ import {
 } from "vitest"
 import { truncateAll } from "./harness"
 
-// The schema itself is what is under test, so this talks to the containerized
-// Postgres directly instead of booting Nest: a unique index, an enum and a
-// cascade rule are enforced by the database or they are not enforced at all.
-// The rejections go through the raw client because postgres.js surfaces the
-// SQLSTATE on the error, which is the assertion worth making.
+// The schema is what is under test, so this talks to Postgres directly instead
+// of booting Nest. Rejections go through the raw client because postgres.js
+// surfaces the SQLSTATE on the error, which is the assertion worth making.
 describe("tenancy schema", () => {
   let connection: DatabaseConnection
 
@@ -75,8 +73,6 @@ describe("tenancy schema", () => {
     ])
   })
 
-  // Login is email + password with no tenant selector, so the address has to be
-  // unique across organizations, not within one.
   it("refuses the same email in a second organization", async () => {
     const first = await seedOrg("First")
     const second = await seedOrg("Second")

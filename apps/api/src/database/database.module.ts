@@ -28,11 +28,6 @@ export class DatabaseModule implements OnApplicationShutdown {
     private readonly connection: DatabaseConnection
   ) {}
 
-  /**
-   * The pool is opened lazily by postgres.js, so building this module never
-   * touches the network — which is what lets `gen:api-types` boot the app with
-   * no database in reach.
-   */
   async onApplicationShutdown(): Promise<void> {
     await this.connection.close()
   }

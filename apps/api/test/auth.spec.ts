@@ -61,7 +61,6 @@ describe("auth", () => {
         },
       })
 
-      // The hash is omitted by the DTO, not merely absent from this fixture.
       expect(response.body.user).not.toHaveProperty("passwordHash")
     })
 
@@ -81,7 +80,6 @@ describe("auth", () => {
       )
     })
 
-    // The permanent hole this endpoint would be if it forgot to lock (spec §6.1).
     it("refuses a second registration", async () => {
       await register()
 
@@ -94,8 +92,6 @@ describe("auth", () => {
       expect(await countOf(organizations)).toBe(1)
     })
 
-    // Both requests read an empty `organizations` before either writes to it.
-    // Only the advisory lock in the service stops them both bootstrapping.
     it("creates one organization when two bootstraps race", async () => {
       const [first, second] = await Promise.all([
         api().post("/auth/register").send(OWNER),
@@ -143,7 +139,6 @@ describe("auth", () => {
         .send({ email: "nobody@example.com", password: OWNER.password })
         .expect(HttpStatus.UNAUTHORIZED)
 
-      // Byte for byte: any difference at all is an account enumerator.
       expect(wrongPassword.body).toEqual(unknownEmail.body)
       expect(wrongPassword.body.code).toBe("auth.invalidCredentials")
     })
@@ -204,8 +199,6 @@ describe("auth", () => {
       expect(response.body.code).toBe("auth.invalidRefreshToken")
     })
 
-    // A revoked token still in somebody's hands means it was copied. Rotation is
-    // only worth anything if the replay is what gives the theft away (spec §6).
     it("revokes every session when a spent token is replayed", async () => {
       const registered = await register()
       const rotated = await api()
@@ -220,7 +213,7 @@ describe("auth", () => {
 
       expect(replayed.body.code).toBe("auth.refreshTokenReused")
 
-      // The token the honest holder is carrying dies with the rest of them.
+      // The token the honest holder is carrying dies with the rest.
       const afterTheft = await api()
         .post("/auth/refresh")
         .set("cookie", cookieHeader(rotated))
@@ -328,9 +321,8 @@ function cookiesOf(response: request.Response): Record<string, string> {
   return Object.fromEntries(pairs)
 }
 
-// Supertest keeps no cookie jar, so a session is carried from one request to the
-// next by hand — which is also what lets a test present a token the browser
-// would already have thrown away.
+// Supertest keeps no cookie jar, which is also what lets a test present a token
+// the browser would already have thrown away.
 function cookieHeader(response: request.Response): string {
   return Object.entries(cookiesOf(response))
     .map(([name, value]) => `${name}=${value}`)

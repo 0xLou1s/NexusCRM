@@ -35,9 +35,6 @@ describe("HealthService", () => {
     await expect(service.readAppMeta()).resolves.toEqual(row)
   })
 
-  // An empty app_meta means the schema this build expects was never applied.
-  // The service names that failure and stops there: nothing here knows it is a
-  // 503, which is what lets the same service run outside a request (spec §7).
   it("raises a domain error when the table is empty", async () => {
     const service = await serviceReading([])
 

@@ -27,9 +27,8 @@ const signUpSchema = z
 
 class SignUpDto extends createZodDto(signUpSchema) {}
 
-// Phase 0 ships no endpoint that takes input, and the point of the global pipe
-// and the global filter is what they do *together*. Mounting one here is the
-// only way to walk that path end to end before Phase 1's auth endpoints exist.
+// A throwaway endpoint, so the global pipe and the global filter can be
+// exercised together without tying this to any real route's schema.
 @Controller("__probe")
 class ProbeController {
   @Post()
@@ -55,9 +54,6 @@ describe("request validation", () => {
     await app.close()
   })
 
-  // Every failing field in one response, not just the first: a form paints all
-  // of its errors at once, and a caller that had to fix them one round trip at a
-  // time would be unusable.
   it("answers 422 and names every field that failed", async () => {
     const response = await request(app.getHttpServer())
       .post("/__probe")
@@ -89,9 +85,6 @@ describe("request validation", () => {
     })
   })
 
-  // Nothing English is used to render any of this: the frontend translates
-  // `code` and interpolates `params`. The constraint (8) lives only in the Zod
-  // schema, so changing it changes the sentence with no translation edit.
   it("sends a key and the failed constraint, not a sentence to display", async () => {
     const response = await request(app.getHttpServer())
       .post("/__probe")

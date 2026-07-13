@@ -9,11 +9,6 @@ import { HealthService } from "./health.service"
 export class HealthController {
   constructor(private readonly healthService: HealthService) {}
 
-  /**
-   * `@ZodResponse` is what keeps the three representations of this response in
-   * step: it serializes through the DTO, documents it in OpenAPI, and fails the
-   * build if the returned value stops matching the schema.
-   */
   @Get()
   @ApiOperation({ summary: "Liveness of the API and its database" })
   @ZodResponse({ status: 200, type: HealthDto })

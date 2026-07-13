@@ -6,14 +6,8 @@ import {
   REFRESH_TOKEN_TTL_SECONDS,
 } from "./auth.constants"
 
-/**
- * SameSite=Lax, never None (spec §6, Phase 1 risks).
- *
- * In development the web app is on :3000 and the API on :3001 — a different
- * origin, but the same site, so Lax cookies are sent. In production both sit
- * behind one domain. If a deployment ever needs `None` to work, the deployment
- * is wrong, not this.
- */
+// A deployment that needs SameSite=None is a deployment serving the web app from
+// another site, which this one never does.
 function cookieOptions(secure: boolean): CookieOptions {
   return { httpOnly: true, sameSite: "lax", secure, path: "/" }
 }
@@ -34,8 +28,8 @@ export function setSessionCookies(
   })
 }
 
-// The attributes have to match the ones the cookie was set with, or the browser
-// keeps the old cookie alongside the expired one.
+// The attributes must match the ones the cookie was set with, or the browser
+// keeps the live cookie alongside the expired one.
 export function clearSessionCookies(response: Response, secure: boolean): void {
   response.clearCookie(ACCESS_TOKEN_COOKIE, cookieOptions(secure))
   response.clearCookie(REFRESH_TOKEN_COOKIE, cookieOptions(secure))

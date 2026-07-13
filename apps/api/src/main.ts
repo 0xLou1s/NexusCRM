@@ -13,15 +13,15 @@ async function bootstrap() {
 
   const config = app.get(ConfigService<Env, true>)
 
-  // Exact origin, not "*": the session is a cookie, and browsers refuse a
-  // wildcard together with credentials (spec §6).
+  // Never "*": the session is a cookie, and browsers refuse a wildcard together
+  // with credentials.
   app.enableCors({
     origin: config.get("WEB_ORIGIN", { infer: true }),
     credentials: true,
   })
 
-  // Dev only — Swagger exposes the whole API surface (spec §7). /openapi.json
-  // is also what `pnpm gen:api-types` reads.
+  // Never in production: Swagger exposes the whole API surface. /openapi.json is
+  // what `pnpm gen:api-types` reads.
   if (config.get("NODE_ENV", { infer: true }) !== "production") {
     SwaggerModule.setup("docs", app, buildOpenApiDocument(app), {
       jsonDocumentUrl: "openapi.json",

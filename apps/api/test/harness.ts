@@ -12,8 +12,8 @@ export interface TestApp {
 }
 
 // Nothing is overridden: test/env.ts has already pointed DATABASE_URL and
-// REDIS_URL at the containers, so this boots the real AppModule — global pipe,
-// serializer and exception filter included — rather than a rearrangement of it.
+// REDIS_URL at the containers, so this boots the real AppModule rather than a
+// rearrangement of it.
 export async function createTestApp(): Promise<TestApp> {
   const moduleRef = await Test.createTestingModule({
     imports: [AppModule],
@@ -30,9 +30,8 @@ export async function createTestApp(): Promise<TestApp> {
   }
 }
 
-// Drizzle keeps its migration bookkeeping in the `drizzle` schema, so emptying
-// `public` leaves the schema itself intact and the container is migrated once,
-// in global setup.
+// Only `public`: Drizzle keeps its migration bookkeeping in the `drizzle`
+// schema, so the container stays migrated from global setup.
 export async function truncateAll(
   connection: DatabaseConnection
 ): Promise<void> {

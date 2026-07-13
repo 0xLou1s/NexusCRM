@@ -10,8 +10,6 @@ import {
 import { timestamps } from "./columns.js"
 import { organizations } from "./organizations.js"
 
-// A Postgres enum, not a text column: a typo in a role is a privilege bug, and
-// the database is the only layer that can refuse it outright.
 export const userRole = pgEnum("user_role", ["owner", "admin", "member"])
 
 export const users = pgTable(
@@ -29,8 +27,8 @@ export const users = pgTable(
     ...timestamps,
   },
   (table) => [
-    // Unique across the whole system, not per organization: login is `email` +
-    // password, with no tenant selector, so one address must resolve to one user.
+    // System-wide, not per organization: login has no tenant selector, so one
+    // address must resolve to one user.
     uniqueIndex("users_email_unique").on(table.email),
     index("users_org_id_idx").on(table.orgId),
   ]

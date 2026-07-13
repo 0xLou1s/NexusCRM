@@ -16,9 +16,9 @@ import { JobsModule } from "./jobs/jobs.module"
     ConfigModule.forRoot({
       isGlobal: true,
       validate: validateEnv,
-      // Scripts run with cwd = apps/api, and the workspace keeps a single .env
-      // at the repository root. A missing file is fine: containers and CI pass
-      // the variables in the environment instead.
+      // Scripts run with cwd = apps/api; the workspace keeps one .env at the
+      // repository root. A missing file is fine: containers and CI pass the
+      // variables in the environment instead.
       envFilePath: resolve(process.cwd(), "../../.env"),
     }),
     BullModule.forRootAsync({
@@ -33,11 +33,9 @@ import { JobsModule } from "./jobs/jobs.module"
     AuthModule,
   ],
   providers: [
-    // Every failure leaves through here, in one shape (spec §7).
     { provide: APP_FILTER, useClass: AllExceptionsFilter },
-    // Requests are parsed by the Zod schema behind each DTO...
     { provide: APP_PIPE, useClass: ZodValidationPipe },
-    // ...and responses are re-parsed by it on the way out, so a handler that
+    // Responses are re-parsed by the DTO on the way out, so a handler that
     // drifts from its contract fails here rather than in the browser.
     { provide: APP_INTERCEPTOR, useClass: ZodSerializerInterceptor },
   ],

@@ -9,15 +9,9 @@ import { ACCESS_TOKEN_COOKIE } from "../auth.constants"
 import type { AccessTokenPayload, AuthenticatedRequest } from "../auth.types"
 
 /**
- * Verifies the access token cookie and attaches the caller to the request.
- *
  * Signature only, no database read — that is what a short-lived access token
- * buys. A user who is deactivated mid-session keeps working until it expires;
- * what stops them is the refresh, because their refresh tokens are revoked
- * along with the account (Phase 2).
- *
- * PR 1.3 registers this globally with a `@Public()` opt-out. Here it guards the
- * one endpoint that has a caller to identify.
+ * buys. A user deactivated mid-session keeps working until it expires; what
+ * stops them is the refresh, which revokes with the account.
  */
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
@@ -46,8 +40,7 @@ export class JwtAuthGuard implements CanActivate {
     try {
       return await this.jwtService.verifyAsync<AccessTokenPayload>(token)
     } catch {
-      // Expired or forged, and the caller is told neither: the frontend answers
-      // any 401 by refreshing once (PR 1.4).
+      // Expired or forged, and the caller is told neither.
       throw new UnauthenticatedError("The access token is invalid or expired")
     }
   }

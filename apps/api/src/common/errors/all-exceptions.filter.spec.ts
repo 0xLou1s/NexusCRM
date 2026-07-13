@@ -16,7 +16,6 @@ import { customIssue } from "./zod-issue"
 
 class QuotaExceededError extends DomainError {
   readonly kind: DomainErrorKind = "quota_exceeded"
-  // Phase 6 registers its own key; `common.tooManyRequests` stands in until then.
   readonly code: ErrorKey = ERROR_KEYS.common.tooManyRequests
 }
 
@@ -62,8 +61,6 @@ describe("AllExceptionsFilter", () => {
     })
   })
 
-  // 422, not 400: the JSON parsed, its contents did not pass. Each issue names
-  // the input it came from, which is what lets the form print it in place.
   it("rejects invalid contents as 422 with one issue per field", () => {
     const { error } = z
       .object({ email: z.email(), password: z.string().min(8) })
@@ -84,15 +81,13 @@ describe("AllExceptionsFilter", () => {
         path: "password",
         code: "validation.tooSmall",
         message: expect.any(String),
-        // The constraint travels with the issue, so the Vietnamese sentence can
-        // say "at least 8" without 8 being written down a second time.
+        // The constraint travels with the issue, so a translation can say "at
+        // least 8" without 8 being written down a second time.
         params: expect.objectContaining({ minimum: 8 }),
       },
     ])
   })
 
-  // Only the author of a .refine() knows what its rule means, so only they can
-  // name its key. Zod has nowhere to put one, so it rides in `params`.
   it("takes a refine's key from customIssue and keeps its English message", () => {
     const { error } = z
       .object({ password: z.string(), confirmPassword: z.string() })
@@ -113,8 +108,6 @@ describe("AllExceptionsFilter", () => {
     ])
   })
 
-  // No sentence interpolates a regex, so publishing the one behind z.email()
-  // would only bloat every response and hand out the rule.
   it("keeps Zod's compiled regex out of the params it publishes", () => {
     const { error } = z.object({ email: z.email() }).safeParse({ email: "no" })
 
@@ -136,9 +129,6 @@ describe("AllExceptionsFilter", () => {
     expect(body.issues?.[0]?.path).toBe("profile.phone")
   })
 
-  // A domain rule can be about a field too. "This email is taken" is not a Zod
-  // failure, but the frontend still prints it under the email input — so it
-  // travels in the same `issues` array and needs no special case there.
   it("lets a domain error blame a field", () => {
     const { status, body } = respondTo(
       new ConflictError("That email is already registered", {
@@ -174,8 +164,6 @@ describe("AllExceptionsFilter", () => {
     })
   })
 
-  // An unhandled throw is a bug on our side. What it says — a connection string,
-  // a stack, a query — belongs in the log, never in the response.
   it("says nothing about an unexpected failure beyond 500", () => {
     const log = vi.spyOn(Logger.prototype, "error").mockImplementation(() => {})
 
