@@ -19,11 +19,13 @@ import { CurrentUser } from "../auth/decorators/current-user.decorator"
 import { OrgId } from "../auth/decorators/org-id.decorator"
 import { Roles } from "../auth/decorators/roles.decorator"
 import { ApiErrorDto } from "../common/errors/api-error.dto"
-import { CreateUserDto } from "./dto/create-user.dto"
-import { ListUsersQueryDto } from "./dto/list-users.dto"
-import { ResetPasswordDto } from "./dto/reset-password.dto"
-import { UpdateUserDto } from "./dto/update-user.dto"
-import { UserDto } from "./dto/user.dto"
+import {
+  CreateUserDto,
+  ListUsersQueryDto,
+  ResetPasswordDto,
+  UpdateUserDto,
+  UserDto,
+} from "./users.dto"
 import { UsersService } from "./users.service"
 
 @Controller("users")

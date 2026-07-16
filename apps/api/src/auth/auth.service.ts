@@ -16,6 +16,7 @@ import { normalizeEmail } from "../common/normalize-email"
 import { isUniqueViolation } from "../common/postgres-errors"
 import { DATABASE_CONNECTION } from "../database/database.module"
 import { REFRESH_TOKEN_TTL_SECONDS } from "./auth.constants"
+import type { LoginDto, RegisterDto } from "./auth.dto"
 import {
   AccountDisabledError,
   EmailAlreadyTakenError,
@@ -23,11 +24,9 @@ import {
   InvalidRefreshTokenError,
   RefreshTokenReusedError,
   RegistrationClosedError,
-} from "./auth.errors"
+} from "./auth.error"
+import { toPublicUser, type PublicUser } from "./auth.model"
 import type { AccessTokenPayload, SessionContext } from "./auth.types"
-import type { LoginDto } from "./dto/login.dto"
-import type { RegisterDto } from "./dto/register.dto"
-import { toPublicUser, type PublicUser } from "./dto/session.dto"
 import { generateRefreshToken, hashRefreshToken } from "./refresh-token"
 
 // Verified against when the email is unknown, so an unknown account costs the

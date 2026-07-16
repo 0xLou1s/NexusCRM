@@ -1,16 +1,17 @@
 import { Injectable } from "@nestjs/common"
 import { hash } from "@node-rs/argon2"
 import type { User, UserRole } from "@workspace/db"
-import { EmailAlreadyTakenError } from "../auth/auth.errors"
+import { EmailAlreadyTakenError } from "../auth/auth.error"
+import { toPublicUser, type PublicUser } from "../auth/auth.model"
 import { AuthService } from "../auth/auth.service"
 import type { AuthenticatedUser } from "../auth/auth.types"
-import { toPublicUser, type PublicUser } from "../auth/dto/session.dto"
 import { normalizeEmail } from "../common/normalize-email"
 import { isUniqueViolation } from "../common/postgres-errors"
-import type { CreateUserDto } from "./dto/create-user.dto"
-import type { ListUsersFilters } from "./dto/list-users.dto"
-import type { ResetPasswordDto } from "./dto/reset-password.dto"
-import type { UpdateUserDto } from "./dto/update-user.dto"
+import type {
+  CreateUserDto,
+  ResetPasswordDto,
+  UpdateUserDto,
+} from "./users.dto"
 import {
   CannotAssignRoleError,
   CannotDeactivateSelfError,
@@ -18,13 +19,14 @@ import {
   CannotManageUserError,
   TeamNotFoundError,
   UserNotFoundError,
-} from "./users.errors"
-import { UsersRepository } from "./users.repository"
+} from "./users.error"
+import type { ListUsersFilters } from "./users.model"
+import { UsersRepo } from "./users.repo"
 
 @Injectable()
 export class UsersService {
   constructor(
-    private readonly repository: UsersRepository,
+    private readonly repository: UsersRepo,
     private readonly authService: AuthService
   ) {}
 

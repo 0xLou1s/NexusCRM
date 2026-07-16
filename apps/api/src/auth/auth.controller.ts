@@ -16,6 +16,7 @@ import { ApiErrorDto } from "../common/errors/api-error.dto"
 import type { Env } from "../config/env"
 import { REFRESH_TOKEN_COOKIE } from "./auth.constants"
 import { clearSessionCookies, setSessionCookies } from "./auth.cookies"
+import { LoginDto, RegisterDto, SessionDto } from "./auth.dto"
 import { AuthService } from "./auth.service"
 import type {
   AuthenticatedRequest,
@@ -24,9 +25,6 @@ import type {
 } from "./auth.types"
 import { CurrentUser } from "./decorators/current-user.decorator"
 import { Public } from "./decorators/public.decorator"
-import { LoginDto } from "./dto/login.dto"
-import { RegisterDto } from "./dto/register.dto"
-import { SessionDto } from "./dto/session.dto"
 
 @Controller("auth")
 export class AuthController {
