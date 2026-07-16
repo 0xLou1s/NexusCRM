@@ -46,6 +46,7 @@ describe("auth", () => {
         user: {
           id: expect.any(String),
           orgId: expect.any(String),
+          teamId: null,
           email: OWNER.email,
           fullName: OWNER.fullName,
           role: "owner",
