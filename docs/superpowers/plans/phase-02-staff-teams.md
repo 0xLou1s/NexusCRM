@@ -16,16 +16,16 @@
 
 ## PR 2.2 — Staff management
 
-- [ ] `nest g resource users`
-- [ ] `GET /users` — list within the org, filter by role, team, active flag
-- [ ] `POST /users` — create staff (owner/admin only); the creator sets the initial password
-- [ ] `PATCH /users/:id` — name, role, team, active flag
-- [ ] Assigning a team validates it belongs to the caller's org, tested — the FK alone does not stop a cross-org `team_id`
-- [ ] `POST /users/:id/reset-password` — owner/admin only
-- [ ] `DELETE /users/:id` — soft delete via `is_active = false`. Hard delete would orphan messages and appointments.
-- [ ] Role rules, tested: only an `owner` may create or demote another `owner`; an `admin` may manage `member`s only; **nobody can demote or deactivate themselves** (that is how you lock yourself out of your own system)
-- [ ] Deactivating a user revokes all of their refresh tokens immediately
-- [ ] Run `pnpm gen:api-types`
+- [x] `nest g resource users`
+- [x] `GET /users` — list within the org, filter by role, team, active flag
+- [x] `POST /users` — create staff (owner/admin only); the creator sets the initial password
+- [x] `PATCH /users/:id` — name, role, team, active flag
+- [x] Assigning a team validates it belongs to the caller's org, tested — the FK alone does not stop a cross-org `team_id`
+- [x] `POST /users/:id/reset-password` — owner/admin only
+- [x] `DELETE /users/:id` — soft delete via `is_active = false`. Hard delete would orphan messages and appointments.
+- [x] Role rules, tested: only an `owner` may create or demote another `owner`; an `admin` may manage `member`s only; **nobody can demote or deactivate themselves** (that is how you lock yourself out of your own system)
+- [x] Deactivating a user revokes all of their refresh tokens immediately
+- [x] Run `pnpm gen:api-types`
 
 ## PR 2.3 — Teams
 

@@ -1,5 +1,6 @@
 import { AUTH_ERROR_KEYS } from "../../auth/auth.error-keys"
 import { HEALTH_ERROR_KEYS } from "../../health/health.error-keys"
+import { USERS_ERROR_KEYS } from "../../users/users.error-keys"
 import { COMMON_ERROR_KEYS, VALIDATION_ERROR_KEYS } from "./common.error-keys"
 
 /**
@@ -13,6 +14,7 @@ export const ERROR_KEYS = {
   common: COMMON_ERROR_KEYS,
   validation: VALIDATION_ERROR_KEYS,
   auth: AUTH_ERROR_KEYS,
+  users: USERS_ERROR_KEYS,
   health: HEALTH_ERROR_KEYS,
 } as const satisfies Record<string, Record<string, string>>
 
