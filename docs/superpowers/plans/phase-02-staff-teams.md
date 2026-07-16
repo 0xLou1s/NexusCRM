@@ -10,9 +10,9 @@
 
 ## PR 2.1 — Schema: teams
 
-- [ ] `teams` table (spec §4.1); add `users.team_id` as a nullable FK
-- [ ] Migration
-- [ ] Verify: deleting a team leaves its users intact with `team_id = null` (do not cascade — deleting a team must not delete people)
+- [x] `teams` table (spec §4.1); add `users.team_id` as a nullable FK
+- [x] Migration
+- [x] Verify: deleting a team leaves its users intact with `team_id = null` (do not cascade — deleting a team must not delete people)
 
 ## PR 2.2 — Staff management
 
@@ -20,6 +20,7 @@
 - [ ] `GET /users` — list within the org, filter by role, team, active flag
 - [ ] `POST /users` — create staff (owner/admin only); the creator sets the initial password
 - [ ] `PATCH /users/:id` — name, role, team, active flag
+- [ ] Assigning a team validates it belongs to the caller's org, tested — the FK alone does not stop a cross-org `team_id`
 - [ ] `POST /users/:id/reset-password` — owner/admin only
 - [ ] `DELETE /users/:id` — soft delete via `is_active = false`. Hard delete would orphan messages and appointments.
 - [ ] Role rules, tested: only an `owner` may create or demote another `owner`; an `admin` may manage `member`s only; **nobody can demote or deactivate themselves** (that is how you lock yourself out of your own system)

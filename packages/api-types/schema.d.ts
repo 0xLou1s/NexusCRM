@@ -212,6 +212,8 @@ export interface components {
         id: string
         /** Format: uuid */
         orgId: string
+        /** Format: uuid */
+        teamId: string | null
         email: string
         fullName: string
         /** @enum {string} */

@@ -9,6 +9,7 @@ import {
 } from "drizzle-orm/pg-core"
 import { timestamps } from "./columns.js"
 import { organizations } from "./organizations.js"
+import { teams } from "./teams.js"
 
 export const userRole = pgEnum("user_role", ["owner", "admin", "member"])
 
@@ -19,6 +20,10 @@ export const users = pgTable(
     orgId: uuid("org_id")
       .notNull()
       .references(() => organizations.id, { onDelete: "cascade" }),
+    // `set null`, not cascade: deleting a team must not delete its people.
+    teamId: uuid("team_id").references(() => teams.id, {
+      onDelete: "set null",
+    }),
     email: text("email").notNull(),
     passwordHash: text("password_hash").notNull(),
     fullName: text("full_name").notNull(),
@@ -31,6 +36,7 @@ export const users = pgTable(
     // address must resolve to one user.
     uniqueIndex("users_email_unique").on(table.email),
     index("users_org_id_idx").on(table.orgId),
+    index("users_team_id_idx").on(table.teamId),
   ]
 )
 

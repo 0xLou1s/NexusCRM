@@ -2,6 +2,7 @@ import {
   createDatabase,
   organizations,
   refreshTokens,
+  teams,
   users,
   type DatabaseConnection,
   type NewUser,
@@ -59,6 +60,12 @@ describe("tenancy schema", () => {
     return id
   }
 
+  async function seedTeam(orgId: string, name = "Sales"): Promise<string> {
+    const id = randomUUID()
+    await connection.db.insert(teams).values({ id, orgId, name })
+    return id
+  }
+
   it("defaults a new user to an active member", async () => {
     const orgId = await seedOrg()
     const userId = await seedUser(orgId)
@@ -110,5 +117,20 @@ describe("tenancy schema", () => {
 
     expect(await connection.db.select().from(users)).toHaveLength(0)
     expect(await connection.db.select().from(refreshTokens)).toHaveLength(0)
+  })
+
+  it("clears team_id instead of deleting the user when the team is deleted", async () => {
+    const orgId = await seedOrg()
+    const teamId = await seedTeam(orgId)
+    const userId = await seedUser(orgId, { teamId })
+
+    await connection.db.delete(teams).where(eq(teams.id, teamId))
+
+    const rows = await connection.db
+      .select()
+      .from(users)
+      .where(eq(users.id, userId))
+
+    expect(rows).toEqual([expect.objectContaining({ teamId: null })])
   })
 })
