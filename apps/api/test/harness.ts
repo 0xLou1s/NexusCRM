@@ -1,6 +1,7 @@
 import type { INestApplication, Type } from "@nestjs/common"
 import { Test } from "@nestjs/testing"
 import type { DatabaseConnection } from "@workspace/db"
+import type request from "supertest"
 import { AppModule } from "../src/app.module"
 import { configureApp } from "../src/app.setup"
 import { DATABASE_CONNECTION } from "../src/database/database.module"
@@ -32,6 +33,14 @@ export async function createTestApp(
     connection: app.get<DatabaseConnection>(DATABASE_CONNECTION),
     close: () => app.close(),
   }
+}
+
+// Supertest keeps no cookie jar; a session is carried by hand.
+export function cookieHeader(response: request.Response): string {
+  const header: unknown = response.headers["set-cookie"]
+  const cookies = Array.isArray(header) ? (header as string[]) : []
+
+  return cookies.map((cookie) => cookie.split(";")[0]).join("; ")
 }
 
 // Only `public`: Drizzle keeps its migration bookkeeping in the `drizzle`

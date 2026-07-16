@@ -8,7 +8,12 @@ import { CurrentUser } from "../src/auth/decorators/current-user.decorator"
 import { OrgId } from "../src/auth/decorators/org-id.decorator"
 import { Public } from "../src/auth/decorators/public.decorator"
 import { Roles } from "../src/auth/decorators/roles.decorator"
-import { createTestApp, truncateAll, type TestApp } from "./harness"
+import {
+  cookieHeader,
+  createTestApp,
+  truncateAll,
+  type TestApp,
+} from "./harness"
 
 const OWNER = {
   organizationName: "Acme",
@@ -167,11 +172,3 @@ describe("guards", () => {
     })
   })
 })
-
-// Supertest keeps no cookie jar; a session is carried by hand.
-function cookieHeader(response: request.Response): string {
-  const header: unknown = response.headers["set-cookie"]
-  const cookies = Array.isArray(header) ? (header as string[]) : []
-
-  return cookies.map((cookie) => cookie.split(";")[0]).join("; ")
-}
