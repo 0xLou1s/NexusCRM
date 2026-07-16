@@ -112,6 +112,68 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  "/users": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** List the staff in the caller's organization */
+    get: operations["UsersController_list"]
+    put?: never
+    /**
+     * Create a staff account
+     * @description The creator sets the initial password. An admin may create members only; only an owner may create another owner or admin.
+     */
+    post: operations["UsersController_create"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/users/{id}": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    /**
+     * Deactivate a staff account
+     * @description A soft delete via the active flag; a hard delete would orphan this user's messages and appointments. Their sessions are revoked at once.
+     */
+    delete: operations["UsersController_remove"]
+    options?: never
+    head?: never
+    /**
+     * Update a staff account's name, role, team or active flag
+     * @description Nobody may change their own role or deactivate themselves. Assigning a team it does not own, or one from another organization, is refused.
+     */
+    patch: operations["UsersController_update"]
+    trace?: never
+  }
+  "/users/{id}/reset-password": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Set a new password for a staff account */
+    post: operations["UsersController_resetPassword"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
 }
 export type webhooks = Record<string, never>
 export interface components {
@@ -156,6 +218,12 @@ export interface components {
         | "auth.invalidRefreshToken"
         | "auth.refreshTokenReused"
         | "auth.accountDisabled"
+        | "users.notFound"
+        | "users.cannotManageUser"
+        | "users.cannotAssignRole"
+        | "users.cannotDemoteSelf"
+        | "users.cannotDeactivateSelf"
+        | "users.teamNotFound"
         | "health.appMetaMissing"
       message: string
       params?: {
@@ -192,6 +260,12 @@ export interface components {
           | "auth.invalidRefreshToken"
           | "auth.refreshTokenReused"
           | "auth.accountDisabled"
+          | "users.notFound"
+          | "users.cannotManageUser"
+          | "users.cannotAssignRole"
+          | "users.cannotDemoteSelf"
+          | "users.cannotDeactivateSelf"
+          | "users.teamNotFound"
           | "health.appMetaMissing"
         message: string
         params?: {
@@ -237,6 +311,45 @@ export interface components {
     LoginDto: {
       /** Format: email */
       email: string
+      password: string
+    }
+    UserDto_Output: {
+      /** Format: uuid */
+      id: string
+      /** Format: uuid */
+      orgId: string
+      /** Format: uuid */
+      teamId: string | null
+      email: string
+      fullName: string
+      /** @enum {string} */
+      role: "owner" | "admin" | "member"
+      isActive: boolean
+      /** Format: date-time */
+      createdAt: string
+      /** Format: date-time */
+      updatedAt: string
+    }
+    CreateUserDto: {
+      /** Format: email */
+      email: string
+      fullName: string
+      password: string
+      /**
+       * @default member
+       * @enum {string}
+       */
+      role: "owner" | "admin" | "member"
+    }
+    UpdateUserDto: {
+      fullName?: string
+      /** @enum {string} */
+      role?: "owner" | "admin" | "member"
+      /** Format: uuid */
+      teamId?: string | null
+      isActive?: boolean
+    }
+    ResetPasswordDto: {
       password: string
     }
   }
@@ -513,6 +626,328 @@ export interface operations {
       }
       /** @description No access token, or one that no longer verifies */
       401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorDto"]
+        }
+      }
+      /** @description The request failed validation; `issues` names the fields */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorDto"]
+        }
+      }
+      /** @description Unexpected server error */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorDto"]
+        }
+      }
+    }
+  }
+  UsersController_list: {
+    parameters: {
+      query?: {
+        role?: "owner" | "admin" | "member"
+        teamId?: string
+        isActive?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["UserDto_Output"][]
+        }
+      }
+      /** @description No access token, or one that no longer verifies */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorDto"]
+        }
+      }
+      /** @description The request failed validation; `issues` names the fields */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorDto"]
+        }
+      }
+      /** @description Unexpected server error */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorDto"]
+        }
+      }
+    }
+  }
+  UsersController_create: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateUserDto"]
+      }
+    }
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["UserDto_Output"]
+        }
+      }
+      /** @description No access token, or one that no longer verifies */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorDto"]
+        }
+      }
+      /** @description The caller's role is none of: owner, admin */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorDto"]
+        }
+      }
+      /** @description That email already belongs to a user */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorDto"]
+        }
+      }
+      /** @description The request failed validation; `issues` names the fields */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorDto"]
+        }
+      }
+      /** @description Unexpected server error */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorDto"]
+        }
+      }
+    }
+  }
+  UsersController_remove: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description The account is deactivated and its sessions revoked */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description No access token, or one that no longer verifies */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorDto"]
+        }
+      }
+      /** @description The caller's role is none of: owner, admin */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorDto"]
+        }
+      }
+      /** @description No such user in this organization */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorDto"]
+        }
+      }
+      /** @description The request failed validation; `issues` names the fields */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorDto"]
+        }
+      }
+      /** @description Unexpected server error */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorDto"]
+        }
+      }
+    }
+  }
+  UsersController_update: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateUserDto"]
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["UserDto_Output"]
+        }
+      }
+      /** @description No access token, or one that no longer verifies */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorDto"]
+        }
+      }
+      /** @description The caller's role is none of: owner, admin */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorDto"]
+        }
+      }
+      /** @description No such user, or a team that is not this organization's */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorDto"]
+        }
+      }
+      /** @description The request failed validation; `issues` names the fields */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorDto"]
+        }
+      }
+      /** @description Unexpected server error */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorDto"]
+        }
+      }
+    }
+  }
+  UsersController_resetPassword: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ResetPasswordDto"]
+      }
+    }
+    responses: {
+      /** @description The password was replaced */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description No access token, or one that no longer verifies */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorDto"]
+        }
+      }
+      /** @description The caller's role is none of: owner, admin */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApiErrorDto"]
+        }
+      }
+      /** @description No such user in this organization */
+      404: {
         headers: {
           [name: string]: unknown
         }

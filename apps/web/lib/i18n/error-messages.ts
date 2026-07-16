@@ -5,6 +5,7 @@ import {
   VALIDATION_MESSAGES,
 } from "@/lib/i18n/messages/common"
 import { HEALTH_MESSAGES } from "@/lib/i18n/messages/health"
+import { USERS_MESSAGES } from "@/lib/i18n/messages/users"
 import type { ErrorMessage } from "@/lib/i18n/types"
 
 // `Record<ErrorKey, ErrorMessage>` is what makes this exhaustive: a key with no
@@ -13,6 +14,7 @@ export const ERROR_MESSAGES: Record<ErrorKey, ErrorMessage> = {
   ...COMMON_MESSAGES,
   ...VALIDATION_MESSAGES,
   ...AUTH_MESSAGES,
+  ...USERS_MESSAGES,
   ...HEALTH_MESSAGES,
 }
 

@@ -11,6 +11,7 @@ import { validateEnv, type Env } from "./config/env"
 import { DatabaseModule } from "./database/database.module"
 import { HealthModule } from "./health/health.module"
 import { JobsModule } from "./jobs/jobs.module"
+import { UsersModule } from "./users/users.module"
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { JobsModule } from "./jobs/jobs.module"
     JobsModule,
     AuthModule,
     ActivityModule,
+    UsersModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: AllExceptionsFilter },

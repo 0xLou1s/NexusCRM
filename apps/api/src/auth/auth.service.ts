@@ -12,6 +12,7 @@ import {
 import { and, eq, isNull, sql } from "drizzle-orm"
 import { randomBytes } from "node:crypto"
 import { UnauthenticatedError } from "../common/errors/common.errors"
+import { normalizeEmail } from "../common/normalize-email"
 import { isUniqueViolation } from "../common/postgres-errors"
 import { DATABASE_CONNECTION } from "../database/database.module"
 import { REFRESH_TOKEN_TTL_SECONDS } from "./auth.constants"
@@ -195,6 +196,19 @@ export class AuthService {
     return { user: toPublicUser(user), organization }
   }
 
+  // Deactivating a user must end their sessions now, not whenever each access
+  // token happens to expire. Only refresh tokens can be revoked — an access
+  // token is trusted by its signature alone — so this caps the lockout at one
+  // access-token lifetime, after which no refresh can mint another.
+  async revokeAllSessions(userId: string): Promise<void> {
+    await this.connection.db
+      .update(refreshTokens)
+      .set({ revokedAt: new Date() })
+      .where(
+        and(eq(refreshTokens.userId, userId), isNull(refreshTokens.revokedAt))
+      )
+  }
+
   // A token that exists but could not be claimed was already spent, and its
   // holder still has it — so it was copied.
   private async revokeEverythingIfReused(tokenHash: string): Promise<void> {
@@ -268,10 +282,6 @@ export class AuthService {
 
     return row
   }
-}
-
-function normalizeEmail(email: string): string {
-  return email.trim().toLowerCase()
 }
 
 // INSERT ... RETURNING always yields the row it wrote; the array type cannot say
