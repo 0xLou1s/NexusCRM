@@ -3,10 +3,10 @@ import { teams, users, type DatabaseConnection, type User } from "@workspace/db"
 import { and, eq, type SQL } from "drizzle-orm"
 import { OrgScopedRepository } from "../common/database/org-scoped.repository"
 import { DATABASE_CONNECTION } from "../database/database.module"
-import type { ListUsersFilters } from "./dto/list-users.dto"
+import type { ListUsersFilters } from "./users.model"
 
 @Injectable()
-export class UsersRepository extends OrgScopedRepository<typeof users> {
+export class UsersRepo extends OrgScopedRepository<typeof users> {
   constructor(
     @Inject(DATABASE_CONNECTION)
     connection: DatabaseConnection

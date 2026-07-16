@@ -2,7 +2,7 @@ import { Test, TestingModule } from "@nestjs/testing"
 import type { AppMeta, DatabaseConnection } from "@workspace/db"
 import { describe, expect, it } from "vitest"
 import { DATABASE_CONNECTION } from "../database/database.module"
-import { AppMetaMissingError } from "./health.errors"
+import { AppMetaMissingError } from "./health.error"
 import { HealthService } from "./health.service"
 
 const row: AppMeta = {

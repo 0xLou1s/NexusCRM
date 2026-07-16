@@ -1,7 +1,7 @@
 import { Inject, Injectable } from "@nestjs/common"
 import { appMeta, type AppMeta, type DatabaseConnection } from "@workspace/db"
 import { DATABASE_CONNECTION } from "../database/database.module"
-import { AppMetaMissingError } from "./health.errors"
+import { AppMetaMissingError } from "./health.error"
 
 @Injectable()
 export class HealthService {
